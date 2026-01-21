@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ======================================
+// USERS & AUTHENTICATION
+// ======================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+// ======================================
+// CUSTOMERS
+// ======================================
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String
+  plate     String    @unique
+  model     String?
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ======================================
+// SERVICES
+// ======================================
+
+model Service {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal   @db.Decimal(10, 2)
+  duration    Int       // duracion en minutos
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ======================================
+// BOOKINGS
+// ======================================
+
+model Booking {
+  id            String        @id @default(cuid())
+  referenceCode String        @unique
+  date          DateTime      @db.Date
+  time          String        // HH:mm format
+  status        BookingStatus @default(PENDING)
+  paymentMethod PaymentMethod
+  notes         String?
+  totalPrice    Decimal       @db.Decimal(10, 2)
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([status])
+  @@index([customerId])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  QR
+  PAYMENT_LINK
+}
+
+// ======================================
+// SETTINGS (Singleton - parametrizable)
+// ======================================
+
+model Settings {
+  id             String  @id @default("main")
+  businessName   String  @default("Mi Lavadero")
+  whatsappNumber String  @default("+595991234567")
+  openTime       String  @default("08:00")
+  closeTime      String  @default("18:00")
+  slotDuration   Int     @default(30) // minutos
+  maxSlotsPerTime Int    @default(1)  // capacidad por horario
+  workingDays    String  @default("1,2,3,4,5,6") // 0=Dom, 1=Lun, ..., 6=Sab
+  address        String?
+  welcomeMessage String  @default("¡Gracias por reservar con nosotros!")
+  currency       String  @default("PYG")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

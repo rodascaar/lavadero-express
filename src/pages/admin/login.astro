@@ -1,0 +1,165 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { verifySession, getSessionCookie } from "../../lib/auth";
+
+// Check if already logged in
+const sessionCookie = Astro.cookies.get(getSessionCookie());
+const session = sessionCookie ? verifySession(sessionCookie.value) : null;
+
+if (session) {
+    return Astro.redirect("/admin");
+}
+
+// Generate simple math captcha
+const num1 = Math.floor(Math.random() * 10) + 1;
+const num2 = Math.floor(Math.random() * 10) + 1;
+const captchaAnswer = num1 + num2;
+---
+
+<BaseLayout title="Admin Login">
+    <div
+        class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-primary-900 flex items-center justify-center p-4"
+    >
+        <div class="card w-full max-w-md p-8 animate-fade-in">
+            <div class="text-center mb-8">
+                <span class="text-5xl mb-4 block">🔐</span>
+                <h1 class="text-2xl font-bold text-slate-900">
+                    Panel de Administración
+                </h1>
+                <p class="text-slate-600 mt-2">
+                    Ingresa tus credenciales para continuar
+                </p>
+            </div>
+
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="label" for="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="input"
+                        placeholder="admin@lavadero.com"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label class="label" for="password">Contraseña</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="input"
+                        placeholder="••••••••"
+                        required
+                    />
+                </div>
+
+                <!-- Simple Math Captcha -->
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <label class="label flex items-center gap-2">
+                        🤖 Verificación de seguridad
+                    </label>
+                    <div class="flex items-center gap-3 mt-2">
+                        <span class="text-xl font-bold text-slate-700">
+                            {num1} + {num2} =
+                        </span>
+                        <input
+                            type="number"
+                            id="captcha"
+                            name="captcha"
+                            class="input w-24 text-center text-lg"
+                            placeholder="?"
+                            required
+                            autocomplete="off"
+                        />
+                    </div>
+                    <input
+                        type="hidden"
+                        id="captcha-answer"
+                        value={captchaAnswer}
+                    />
+                </div>
+
+                <div
+                    id="error-message"
+                    class="hidden text-red-500 text-sm text-center p-3 bg-red-50 rounded-lg"
+                >
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full">
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            <p class="text-center text-slate-500 text-sm mt-6">
+                <a href="/" class="hover:text-primary-600 transition-colors"
+                    >← Volver al sitio</a
+                >
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("login-form") as HTMLFormElement;
+        const errorDiv = document.getElementById(
+            "error-message",
+        ) as HTMLDivElement;
+
+        form?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const email = formData.get("email");
+            const password = formData.get("password");
+            const captcha = formData.get("captcha");
+            const captchaAnswer = (
+                document.getElementById("captcha-answer") as HTMLInputElement
+            ).value;
+
+            // Validate captcha first
+            if (captcha !== captchaAnswer) {
+                errorDiv.textContent =
+                    "❌ Respuesta incorrecta. Por favor resuelve la operación correctamente.";
+                errorDiv.classList.remove("hidden");
+                // Reload to get new captcha
+                setTimeout(() => window.location.reload(), 1500);
+                return;
+            }
+
+            const submitBtn = form.querySelector(
+                'button[type="submit"]',
+            ) as HTMLButtonElement;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Iniciando sesión...";
+            errorDiv.classList.add("hidden");
+
+            try {
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.location.href = "/admin";
+                } else {
+                    errorDiv.textContent =
+                        data.error || "Error al iniciar sesión";
+                    errorDiv.classList.remove("hidden");
+                    // Reload to get new captcha after failed attempt
+                    setTimeout(() => window.location.reload(), 2000);
+                }
+            } catch (error) {
+                errorDiv.textContent = "Error de conexión. Intenta de nuevo.";
+                errorDiv.classList.remove("hidden");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Iniciar Sesión";
+            }
+        });
+    </script>
+</BaseLayout>

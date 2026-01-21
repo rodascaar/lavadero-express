@@ -1,0 +1,310 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import prisma from "../../lib/prisma";
+
+let settings = await prisma.settings.findUnique({
+    where: { id: "main" },
+});
+
+if (!settings) {
+    settings = await prisma.settings.create({
+        data: { id: "main" },
+    });
+}
+
+const workingDays = settings.workingDays.split(",").map(Number);
+
+const dayLabels = [
+    "Domingo",
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+];
+---
+
+<AdminLayout title="Configuración">
+    <form id="settings-form" class="max-w-2xl space-y-8">
+        <!-- Business Info -->
+        <div class="card p-6">
+            <h3
+                class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"
+            >
+                🏢 Información del Negocio
+            </h3>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="label">Nombre del negocio</label>
+                    <input
+                        type="text"
+                        name="businessName"
+                        class="input"
+                        value={settings.businessName}
+                        placeholder="Mi Lavadero"
+                    />
+                </div>
+
+                <div>
+                    <label class="label">Dirección</label>
+                    <input
+                        type="text"
+                        name="address"
+                        class="input"
+                        value={settings.address || ""}
+                        placeholder="Av. Principal 123, Ciudad"
+                    />
+                </div>
+
+                <div>
+                    <label class="label">Moneda</label>
+                    <select name="currency" class="input">
+                        <option
+                            value="PYG"
+                            selected={settings.currency === "PYG"}
+                            >Guaraníes (₲)</option
+                        >
+                        <option
+                            value="USD"
+                            selected={settings.currency === "USD"}
+                            >Dólares ($)</option
+                        >
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="card p-6">
+            <h3
+                class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"
+            >
+                📱 WhatsApp
+            </h3>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="label"
+                        >Número de WhatsApp (con código de país)</label
+                    >
+                    <input
+                        type="tel"
+                        name="whatsappNumber"
+                        class="input"
+                        value={settings.whatsappNumber}
+                        placeholder="+595991234567"
+                    />
+                    <p class="text-sm text-slate-500 mt-1">
+                        Este número recibirá los tickets de reserva. Formato:
+                        +595XXXXXXXXX
+                    </p>
+                </div>
+
+                <div>
+                    <label class="label">Mensaje de bienvenida</label>
+                    <textarea
+                        name="welcomeMessage"
+                        class="input"
+                        rows="2"
+                        placeholder="¡Gracias por reservar con nosotros!"
+                        >{settings.welcomeMessage}</textarea
+                    >
+                    <p class="text-sm text-slate-500 mt-1">
+                        Este mensaje aparece al final del ticket de WhatsApp
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule -->
+        <div class="card p-6">
+            <h3
+                class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"
+            >
+                🕐 Horarios
+            </h3>
+
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="label">Hora de apertura</label>
+                        <input
+                            type="time"
+                            name="openTime"
+                            class="input"
+                            value={settings.openTime}
+                        />
+                    </div>
+                    <div>
+                        <label class="label">Hora de cierre</label>
+                        <input
+                            type="time"
+                            name="closeTime"
+                            class="input"
+                            value={settings.closeTime}
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="label">Duración de cada turno (minutos)</label
+                    >
+                    <select name="slotDuration" class="input">
+                        <option
+                            value="15"
+                            selected={settings.slotDuration === 15}
+                            >15 minutos</option
+                        >
+                        <option
+                            value="30"
+                            selected={settings.slotDuration === 30}
+                            >30 minutos</option
+                        >
+                        <option
+                            value="45"
+                            selected={settings.slotDuration === 45}
+                            >45 minutos</option
+                        >
+                        <option
+                            value="60"
+                            selected={settings.slotDuration === 60}
+                            >1 hora</option
+                        >
+                    </select>
+                </div>
+
+                <div>
+                    <label class="label">Capacidad por horario</label>
+                    <select name="maxSlotsPerTime" class="input">
+                        <option
+                            value="1"
+                            selected={(settings as any).maxSlotsPerTime === 1}
+                            >1 vehículo</option
+                        >
+                        <option
+                            value="2"
+                            selected={(settings as any).maxSlotsPerTime === 2}
+                            >2 vehículos</option
+                        >
+                        <option
+                            value="3"
+                            selected={(settings as any).maxSlotsPerTime === 3}
+                            >3 vehículos</option
+                        >
+                        <option
+                            value="4"
+                            selected={(settings as any).maxSlotsPerTime === 4}
+                            >4 vehículos</option
+                        >
+                        <option
+                            value="5"
+                            selected={(settings as any).maxSlotsPerTime === 5}
+                            >5 vehículos</option
+                        >
+                    </select>
+                    <p class="text-sm text-slate-500 mt-1">
+                        Cuántos vehículos pueden atenderse simultáneamente en
+                        cada horario
+                    </p>
+                </div>
+
+                <div>
+                    <label class="label">Días de trabajo</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                        {
+                            dayLabels.map((day, index) => (
+                                <label
+                                    class={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${workingDays.includes(index) ? "border-primary-500 bg-primary-50" : "border-slate-200 hover:border-primary-300"}`}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        name="workingDays"
+                                        value={index}
+                                        checked={workingDays.includes(index)}
+                                        class="w-4 h-4 text-primary-600 rounded"
+                                    />
+                                    <span class="text-sm">{day}</span>
+                                </label>
+                            ))
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex gap-4">
+            <button type="submit" class="btn btn-primary flex-1" id="btn-save">
+                💾 Guardar Cambios
+            </button>
+        </div>
+
+        <div
+            id="save-message"
+            class="hidden text-center p-4 rounded-lg bg-emerald-50 text-emerald-700"
+        >
+            ✅ Configuración guardada correctamente
+        </div>
+    </form>
+
+    <script>
+        const form = document.getElementById(
+            "settings-form",
+        ) as HTMLFormElement;
+        const saveMessage = document.getElementById(
+            "save-message",
+        ) as HTMLDivElement;
+        const saveBtn = document.getElementById(
+            "btn-save",
+        ) as HTMLButtonElement;
+
+        form?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+
+            // Get working days as array
+            const workingDays = formData.getAll("workingDays").join(",");
+
+            const data = {
+                businessName: formData.get("businessName"),
+                address: formData.get("address"),
+                currency: formData.get("currency"),
+                whatsappNumber: formData.get("whatsappNumber"),
+                welcomeMessage: formData.get("welcomeMessage"),
+                openTime: formData.get("openTime"),
+                closeTime: formData.get("closeTime"),
+                slotDuration: parseInt(formData.get("slotDuration") as string),
+                maxSlotsPerTime: parseInt(
+                    formData.get("maxSlotsPerTime") as string,
+                ),
+                workingDays,
+            };
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Guardando...";
+
+            try {
+                const response = await fetch("/api/settings", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    saveMessage.classList.remove("hidden");
+                    setTimeout(() => saveMessage.classList.add("hidden"), 3000);
+                } else {
+                    alert("Error al guardar la configuración");
+                }
+            } catch (error) {
+                alert("Error de conexión");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = "💾 Guardar Cambios";
+            }
+        });
+    </script>
+</AdminLayout>

@@ -1,0 +1,309 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import prisma from "../../lib/prisma";
+
+const services = await prisma.service.findMany({
+    orderBy: { sortOrder: "asc" },
+});
+---
+
+<AdminLayout title="Servicios">
+    <div class="flex items-center justify-between mb-6">
+        <p class="text-slate-600">
+            Gestiona los servicios y precios de tu lavadero
+        </p>
+        <button id="btn-new" class="btn btn-primary">
+            ➕ Nuevo Servicio
+        </button>
+    </div>
+
+    <!-- Services Grid -->
+    <div
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        id="services-grid"
+    >
+        {
+            services.map((service) => (
+                <div
+                    class="card p-6 service-card"
+                    data-id={service.id}
+                    data-name={service.name}
+                    data-description={service.description || ""}
+                    data-price={service.price.toString()}
+                    data-duration={service.duration}
+                    data-active={service.active}
+                >
+                    <div class="flex items-start justify-between mb-4">
+                        <div
+                            class={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${service.active ? "bg-primary-100" : "bg-slate-100"}`}
+                        >
+                            🚗
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button
+                                class="btn-edit text-slate-500 hover:text-primary-600 p-2"
+                                title="Editar"
+                            >
+                                ✏️
+                            </button>
+                            <button
+                                class="btn-toggle p-2"
+                                data-id={service.id}
+                                data-active={service.active}
+                                title={
+                                    service.active ? "Desactivar" : "Activar"
+                                }
+                            >
+                                {service.active ? "🟢" : "🔴"}
+                            </button>
+                        </div>
+                    </div>
+
+                    <h3
+                        class={`text-lg font-bold ${service.active ? "text-slate-900" : "text-slate-400"}`}
+                    >
+                        {service.name}
+                    </h3>
+                    {service.description && (
+                        <p class="text-slate-500 text-sm mt-1">
+                            {service.description}
+                        </p>
+                    )}
+
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                        <div>
+                            <span class="text-2xl font-bold text-primary-600">
+                                {new Intl.NumberFormat("es-PY").format(
+                                    Number(service.price),
+                                )}
+                            </span>
+                            <span class="text-slate-500 text-sm ml-1">₲</span>
+                        </div>
+                        <div class="text-slate-500 text-sm">
+                            ⏱️ {service.duration} min
+                        </div>
+                    </div>
+
+                    {!service.active && (
+                        <div class="mt-3 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded text-center">
+                            Servicio desactivado
+                        </div>
+                    )}
+                </div>
+            ))
+        }
+    </div>
+
+    <!-- Modal -->
+    <div
+        id="modal"
+        class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
+    >
+        <div class="card w-full max-w-md p-6 m-4 animate-fade-in">
+            <h3 id="modal-title" class="text-xl font-bold mb-6">
+                Nuevo Servicio
+            </h3>
+
+            <form id="service-form" class="space-y-4">
+                <input type="hidden" id="service-id" />
+
+                <div>
+                    <label class="label">Nombre del servicio *</label>
+                    <input
+                        type="text"
+                        id="service-name"
+                        class="input"
+                        placeholder="Lavado Premium"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label class="label">Descripción</label>
+                    <textarea
+                        id="service-description"
+                        class="input"
+                        rows="2"
+                        placeholder="Descripción breve del servicio"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="label">Precio (₲) *</label>
+                        <input
+                            type="number"
+                            id="service-price"
+                            class="input"
+                            placeholder="100000"
+                            required
+                            min="0"
+                        />
+                    </div>
+                    <div>
+                        <label class="label">Duración (min) *</label>
+                        <input
+                            type="number"
+                            id="service-duration"
+                            class="input"
+                            placeholder="30"
+                            required
+                            min="5"
+                        />
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button
+                        type="button"
+                        id="btn-cancel"
+                        class="btn btn-secondary flex-1"
+                    >
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary flex-1">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById("modal") as HTMLDivElement;
+        const form = document.getElementById("service-form") as HTMLFormElement;
+        const modalTitle = document.getElementById(
+            "modal-title",
+        ) as HTMLHeadingElement;
+
+        // Open modal for new service
+        document.getElementById("btn-new")?.addEventListener("click", () => {
+            modalTitle.textContent = "Nuevo Servicio";
+            form.reset();
+            (document.getElementById("service-id") as HTMLInputElement).value =
+                "";
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        });
+
+        // Open modal for editing
+        document.querySelectorAll(".btn-edit").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                const card = (e.target as HTMLElement).closest(
+                    ".service-card",
+                ) as HTMLElement;
+                if (!card) return;
+
+                modalTitle.textContent = "Editar Servicio";
+                (
+                    document.getElementById("service-id") as HTMLInputElement
+                ).value = card.dataset.id || "";
+                (
+                    document.getElementById("service-name") as HTMLInputElement
+                ).value = card.dataset.name || "";
+                (
+                    document.getElementById(
+                        "service-description",
+                    ) as HTMLTextAreaElement
+                ).value = card.dataset.description || "";
+                (
+                    document.getElementById("service-price") as HTMLInputElement
+                ).value = card.dataset.price || "";
+                (
+                    document.getElementById(
+                        "service-duration",
+                    ) as HTMLInputElement
+                ).value = card.dataset.duration || "";
+
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+            });
+        });
+
+        // Close modal
+        document.getElementById("btn-cancel")?.addEventListener("click", () => {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        });
+
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) {
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+            }
+        });
+
+        // Submit form
+        form?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = (
+                document.getElementById("service-id") as HTMLInputElement
+            ).value;
+            const name = (
+                document.getElementById("service-name") as HTMLInputElement
+            ).value;
+            const description = (
+                document.getElementById(
+                    "service-description",
+                ) as HTMLTextAreaElement
+            ).value;
+            const price = parseFloat(
+                (document.getElementById("service-price") as HTMLInputElement)
+                    .value,
+            );
+            const duration = parseInt(
+                (
+                    document.getElementById(
+                        "service-duration",
+                    ) as HTMLInputElement
+                ).value,
+            );
+
+            try {
+                const method = id ? "PATCH" : "POST";
+                const body = id
+                    ? { id, name, description, price, duration }
+                    : { name, description, price, duration };
+
+                const response = await fetch("/api/services", {
+                    method,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert("Error al guardar el servicio");
+                }
+            } catch (error) {
+                alert("Error de conexión");
+            }
+        });
+
+        // Toggle active/inactive
+        document.querySelectorAll(".btn-toggle").forEach((btn) => {
+            btn.addEventListener("click", async (e) => {
+                const target = e.currentTarget as HTMLButtonElement;
+                const id = target.dataset.id;
+                const isActive = target.dataset.active === "true";
+
+                try {
+                    const response = await fetch("/api/services", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id, active: !isActive }),
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Error al actualizar");
+                    }
+                } catch (error) {
+                    alert("Error de conexión");
+                }
+            });
+        });
+    </script>
+</AdminLayout>

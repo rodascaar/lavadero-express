@@ -1,0 +1,6 @@
+---
+// Logout - clear cookie and redirect to landing page
+Astro.cookies.delete("admin_session", { path: "/" });
+
+return Astro.redirect("/");
+---

@@ -1,0 +1,275 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import prisma from "../../lib/prisma";
+
+// Fetch bookings with pagination
+const bookings = await prisma.booking.findMany({
+    include: {
+        customer: true,
+        service: true,
+    },
+    orderBy: [{ date: "desc" }, { time: "asc" }],
+    take: 100,
+});
+
+const statusColors: Record<string, string> = {
+    PENDING: "badge-pending",
+    CONFIRMED: "badge-confirmed",
+    IN_PROGRESS: "badge-in-progress",
+    COMPLETED: "badge-completed",
+    CANCELLED: "badge-cancelled",
+};
+
+const statusLabels: Record<string, string> = {
+    PENDING: "Pendiente",
+    CONFIRMED: "Confirmado",
+    IN_PROGRESS: "En Proceso",
+    COMPLETED: "Finalizado",
+    CANCELLED: "Cancelado",
+};
+
+const paymentLabels: Record<string, string> = {
+    CASH: "Efectivo",
+    TRANSFER: "Transferencia",
+    QR: "QR",
+    PAYMENT_LINK: "Link de Pago",
+};
+---
+
+<AdminLayout title="Reservas">
+    <!-- Filters -->
+    <div class="card p-4 mb-6">
+        <div class="flex flex-wrap items-center gap-4">
+            <div>
+                <label class="label">Estado</label>
+                <select id="filter-status" class="input py-2">
+                    <option value="">Todos</option>
+                    <option value="PENDING">Pendiente</option>
+                    <option value="CONFIRMED">Confirmado</option>
+                    <option value="IN_PROGRESS">En Proceso</option>
+                    <option value="COMPLETED">Finalizado</option>
+                    <option value="CANCELLED">Cancelado</option>
+                </select>
+            </div>
+            <div>
+                <label class="label">Fecha</label>
+                <input type="date" id="filter-date" class="input py-2" />
+            </div>
+            <div class="flex-1"></div>
+            <button id="btn-refresh" class="btn btn-secondary">
+                🔄 Actualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Bookings Table -->
+    <div class="card">
+        <div class="table-container">
+            <table class="table" id="bookings-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Fecha/Hora</th>
+                        <th>Cliente</th>
+                        <th>Vehículo</th>
+                        <th>Servicio</th>
+                        <th>Total</th>
+                        <th>Pago</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {
+                        bookings.length === 0 ? (
+                            <tr>
+                                <td
+                                    colspan="9"
+                                    class="text-center py-8 text-slate-500"
+                                >
+                                    No hay reservas registradas
+                                </td>
+                            </tr>
+                        ) : (
+                            bookings.map((booking) => (
+                                <tr
+                                    data-id={booking.id}
+                                    data-status={booking.status}
+                                >
+                                    <td>
+                                        <span class="font-mono text-sm font-medium text-primary-600">
+                                            {booking.referenceCode}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="font-medium">
+                                            {new Date(
+                                                booking.date,
+                                            ).toLocaleDateString("es-ES", {
+                                                weekday: "short",
+                                                day: "numeric",
+                                                month: "short",
+                                            })}
+                                        </div>
+                                        <div class="text-slate-500 text-sm">
+                                            {booking.time}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="font-medium">
+                                            {booking.customer.name}
+                                        </div>
+                                        <div class="text-slate-500 text-sm">
+                                            {booking.customer.phone}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="font-medium">
+                                            {booking.customer.plate}
+                                        </div>
+                                        {booking.customer.model && (
+                                            <div class="text-slate-500 text-sm">
+                                                {booking.customer.model}
+                                            </div>
+                                        )}
+                                    </td>
+                                    <td>{booking.service.name}</td>
+                                    <td class="font-medium">
+                                        {new Intl.NumberFormat("es-PY").format(
+                                            Number(booking.totalPrice),
+                                        )}{" "}
+                                        ₲
+                                    </td>
+                                    <td>
+                                        {paymentLabels[booking.paymentMethod]}
+                                    </td>
+                                    <td>
+                                        <select
+                                            class="status-select input py-1 px-2 text-sm min-w-[130px]"
+                                            data-id={booking.id}
+                                            data-current={booking.status}
+                                        >
+                                            {Object.entries(statusLabels).map(
+                                                ([value, label]) => (
+                                                    <option
+                                                        value={value}
+                                                        selected={
+                                                            booking.status ===
+                                                            value
+                                                        }
+                                                    >
+                                                        {label}
+                                                    </option>
+                                                ),
+                                            )}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button
+                                            class="btn-delete btn btn-sm text-red-500 hover:bg-red-50"
+                                            data-id={booking.id}
+                                            title="Eliminar"
+                                        >
+                                            🗑️
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Status change handler
+        document.querySelectorAll(".status-select").forEach((select) => {
+            select.addEventListener("change", async (e) => {
+                const target = e.target as HTMLSelectElement;
+                const id = target.dataset.id;
+                const newStatus = target.value;
+                const currentStatus = target.dataset.current;
+
+                try {
+                    const response = await fetch(`/api/bookings/${id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ status: newStatus }),
+                    });
+
+                    if (response.ok) {
+                        target.dataset.current = newStatus;
+                        // Update row styling based on status
+                        const row = target.closest("tr");
+                        if (row) {
+                            row.dataset.status = newStatus;
+                        }
+                        // Show success feedback
+                        target.classList.add("ring-2", "ring-emerald-500");
+                        setTimeout(
+                            () =>
+                                target.classList.remove(
+                                    "ring-2",
+                                    "ring-emerald-500",
+                                ),
+                            1000,
+                        );
+                    } else {
+                        target.value = currentStatus || "";
+                        alert("Error al actualizar el estado");
+                    }
+                } catch (error) {
+                    target.value = currentStatus || "";
+                    alert("Error de conexión");
+                }
+            });
+        });
+
+        // Delete handler
+        document.querySelectorAll(".btn-delete").forEach((btn) => {
+            btn.addEventListener("click", async (e) => {
+                const target = e.currentTarget as HTMLButtonElement;
+                const id = target.dataset.id;
+
+                if (!confirm("¿Estás seguro de eliminar esta reserva?")) return;
+
+                try {
+                    const response = await fetch(`/api/bookings/${id}`, {
+                        method: "DELETE",
+                    });
+
+                    if (response.ok) {
+                        const row = target.closest("tr");
+                        row?.remove();
+                    } else {
+                        alert("Error al eliminar");
+                    }
+                } catch (error) {
+                    alert("Error de conexión");
+                }
+            });
+        });
+
+        // Refresh button
+        document
+            .getElementById("btn-refresh")
+            ?.addEventListener("click", () => {
+                window.location.reload();
+            });
+
+        // Filter by status
+        document
+            .getElementById("filter-status")
+            ?.addEventListener("change", (e) => {
+                const status = (e.target as HTMLSelectElement).value;
+                document
+                    .querySelectorAll("#bookings-table tbody tr")
+                    .forEach((row) => {
+                        const rowStatus = (row as HTMLElement).dataset.status;
+                        (row as HTMLElement).style.display =
+                            !status || rowStatus === status ? "" : "none";
+                    });
+            });
+    </script>
+</AdminLayout>
