@@ -1,0 +1,148 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import prisma from "../../lib/prisma";
+
+const settings = await prisma.settings.findUnique({
+    where: { id: "main" },
+});
+
+const businessName = settings?.businessName || "AutoSpa Premium";
+const email = (settings as any)?.email || "[Tu Email Oficial]";
+const timezone = settings?.timezone || "America/Asuncion";
+---
+
+<Layout title={`Política de Privacidad - ${businessName}`}>
+    <main class="min-h-screen bg-luxury-black pt-24 pb-12 px-6">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-4xl font-serif mb-8 text-primary-400">
+                Política de Privacidad y Protección de Datos Personales
+            </h1>
+
+            <div
+                class="prose prose-invert prose-primary max-w-none space-y-6 text-gray-300"
+            >
+                <section>
+                    <h2 class="text-2xl font-bold text-white mb-4">
+                        Política de Privacidad
+                    </h2>
+                    <p>
+                        En {businessName}, nos comprometemos a proteger su
+                        privacidad. Esta política explica cómo recopilamos y
+                        utilizamos su información.
+                    </p>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        1. Datos que Recopilamos
+                    </h3>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li>
+                            <strong>Datos Personales:</strong> Nombre, número de teléfono
+                            y dirección de correo electrónico (si aplica).
+                        </li>
+                        <li>
+                            <strong>Datos del Vehículo:</strong> Patente (Placa),
+                            marca, modelo y color.
+                        </li>
+                        <li>
+                            <strong>Datos de Transacción:</strong> Servicios contratados,
+                            método de pago, fecha y hora de la reserva.
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        2. Finalidad del Tratamiento
+                    </h3>
+                    <p>Los datos son utilizados exclusivamente para:</p>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li>
+                            Gestionar su reserva y optimizar los turnos de
+                            atención.
+                        </li>
+                        <li>
+                            Generar el ticket de servicio mediante integración
+                            con WhatsApp.
+                        </li>
+                        <li>
+                            Mantener un historial de servicios para programas de
+                            lealtad (CRM).
+                        </li>
+                        <li>
+                            Contactar al cliente en caso de cambios operativos o
+                            retrasos.
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        3. Almacenamiento y Seguridad
+                    </h3>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>
+                            <strong>Base de Datos:</strong> Su información se almacena
+                            de forma segura en bases de datos PostgreSQL encriptadas.
+                        </li>
+                        <li>
+                            <strong>Tiempo de Registro:</strong> Los datos se mantienen
+                            mientras el cliente utilice nuestros servicios y posteriormente
+                            para fines contables/fiscales según lo exige la ley.
+                        </li>
+                        <li>
+                            <strong>Zona Horaria:</strong> Las fechas de sus reservas
+                            se normalizan utilizando la zona horaria <strong
+                                >{timezone}</strong
+                            > configurada en el sistema para evitar errores de interpretación.
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        4. Intercambio de Datos con Terceros
+                    </h3>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>
+                            <strong>WhatsApp:</strong> Al confirmar su reserva, nuestra
+                            plataforma redirige a la aplicación de WhatsApp con los
+                            detalles de su cita. Esto implica que los metadatos del
+                            mensaje son procesados por los servidores de Meta.
+                        </li>
+                        <li>
+                            No vendemos, alquilamos ni compartimos sus datos
+                            personales con terceros para fines de marketing sin
+                            su consentimiento explícito.
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        5. Derechos del Usuario
+                    </h3>
+                    <p>
+                        Usted tiene derecho a acceder, rectificar o solicitar la
+                        eliminación de sus datos y los de sus vehículos de
+                        nuestros registros, solicitándolo a través de nuestros
+                        canales oficiales: <a
+                            href={`mailto:${email}`}
+                            class="text-primary-400 hover:underline">{email}</a
+                        >.
+                    </p>
+                </section>
+            </div>
+
+            <div class="mt-12 pt-8 border-t border-white/10">
+                <a
+                    href="/"
+                    class="text-primary-400 hover:text-primary-300 font-medium flex items-center gap-2 transition-colors"
+                >
+                    ← Volver al Inicio
+                </a>
+            </div>
+        </div>
+    </main>
+</Layout>

@@ -136,6 +136,17 @@ model Settings {
   bookingBufferMinutes Int @default(10)
   timezone       String  @default("America/Asuncion")
   
+  // Legal Info
+  legalTitular   String  @default("AutoSpa Premium")
+  legalNif       String  @default("")
+  email          String  @default("")
+  
+  // Social Media
+  facebookUrl    String?
+  instagramUrl   String?
+  tiktokUrl      String?
+
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

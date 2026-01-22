@@ -123,7 +123,7 @@ const dayLabels = [
             <h3
                 class="text-lg font-bold text-white mb-4 flex items-center gap-2"
             >
-                📱 WhatsApp
+                📱 Canales de Comunicación
             </h3>
 
             <div class="space-y-4">
@@ -142,6 +142,17 @@ const dayLabels = [
                         Este número recibirá los tickets de reserva. Formato:
                         +595XXXXXXXXX
                     </p>
+                </div>
+
+                <div>
+                    <label class="label">Email de Contacto Oficial</label>
+                    <input
+                        type="email"
+                        name="email"
+                        class="input"
+                        value={(settings as any).email || ""}
+                        placeholder="contacto@empresa.com"
+                    />
                 </div>
 
                 <div>
@@ -294,6 +305,80 @@ const dayLabels = [
             </div>
         </div>
 
+        <!-- Redes Sociales -->
+        <div class="card p-6">
+            <h3
+                class="text-lg font-bold text-white mb-4 flex items-center gap-2"
+            >
+                🌐 Redes Sociales
+            </h3>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="label">Instagram URL</label>
+                    <input
+                        type="url"
+                        name="instagramUrl"
+                        class="input"
+                        value={(settings as any).instagramUrl || ""}
+                        placeholder="https://instagram.com/tu_usuario"
+                    />
+                </div>
+                <div>
+                    <label class="label">Facebook URL</label>
+                    <input
+                        type="url"
+                        name="facebookUrl"
+                        class="input"
+                        value={(settings as any).facebookUrl || ""}
+                        placeholder="https://facebook.com/tu_pagina"
+                    />
+                </div>
+                <div>
+                    <label class="label">TikTok URL</label>
+                    <input
+                        type="url"
+                        name="tiktokUrl"
+                        class="input"
+                        value={(settings as any).tiktokUrl || ""}
+                        placeholder="https://tiktok.com/@tu_usuario"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Legal -->
+        <div class="card p-6">
+            <h3
+                class="text-lg font-bold text-white mb-4 flex items-center gap-2"
+            >
+                ⚖️ Información Legal
+            </h3>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="label">Titular / Razón Social</label>
+                    <input
+                        type="text"
+                        name="legalTitular"
+                        class="input"
+                        value={(settings as any).legalTitular}
+                        placeholder="AutoSpa Premium"
+                    />
+                </div>
+                <div>
+                    <label class="label">NIF / Cédula / RUC</label>
+                    <input
+                        type="text"
+                        name="legalNif"
+                        class="input"
+                        value={(settings as any).legalNif}
+                        placeholder="1234567-8"
+                    />
+                </div>
+            </div>
+        </div>
+
         <!-- Payment Methods -->
         <div class="card p-6">
             <h3
@@ -386,6 +471,12 @@ const dayLabels = [
                 heroImageUrl: formData.get("heroImageUrl"),
                 bookingBufferMinutes: formData.get("bookingBufferMinutes"),
                 timezone: formData.get("timezone"),
+                legalTitular: formData.get("legalTitular"),
+                legalNif: formData.get("legalNif"),
+                email: formData.get("email"),
+                instagramUrl: formData.get("instagramUrl"),
+                facebookUrl: formData.get("facebookUrl"),
+                tiktokUrl: formData.get("tiktokUrl"),
                 workingDays,
             };
 

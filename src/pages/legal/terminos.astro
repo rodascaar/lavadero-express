@@ -1,0 +1,153 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import prisma from "../../lib/prisma";
+
+const settings = await prisma.settings.findUnique({
+    where: { id: "main" },
+});
+
+const businessName = settings?.businessName || "AutoSpa Premium";
+const bufferMinutes = settings?.bookingBufferMinutes || 10;
+---
+
+<Layout title={`Términos y Condiciones - ${businessName}`}>
+    <main class="min-h-screen bg-luxury-black pt-24 pb-12 px-6">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-4xl font-serif mb-8 text-primary-400">
+                Términos y Condiciones del Servicio de Reservas
+            </h1>
+
+            <div
+                class="prose prose-invert prose-primary max-w-none space-y-6 text-gray-300"
+            >
+                <section>
+                    <h2 class="text-2xl font-bold text-white mb-4">
+                        Bienvenido a {businessName}
+                    </h2>
+                    <p>
+                        Al utilizar nuestro sistema de reservas en línea, usted
+                        acepta los siguientes términos y condiciones.
+                    </p>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        1. Objeto del Servicio
+                    </h3>
+                    <p>
+                        Nuestra plataforma permite la gestión de citas para
+                        servicios de lavado automotriz. La confirmación de la
+                        reserva está sujeta a la disponibilidad técnica y
+                        operativa del local.
+                    </p>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        2. Creación de la Reserva
+                    </h3>
+                    <p>
+                        Para completar una reserva, el usuario debe
+                        proporcionar:
+                    </p>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li>Nombre completo.</li>
+                        <li>
+                            Número de teléfono (para contacto vía WhatsApp).
+                        </li>
+                        <li>Patente/Vehículo (Placa) y Modelo.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        3. Políticas de Horario y Cancelación (Buffer Time)
+                    </h3>
+                    <p>
+                        Nuestro sistema opera bajo una estricta política de
+                        puntualidad para garantizar la calidad del servicio:
+                    </p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>
+                            <strong>Ventana de Reserva:</strong> Las reservas deben
+                            realizarse con al menos <strong
+                                >{bufferMinutes} minutos</strong
+                            > de antelación al inicio del turno seleccionado. El sistema
+                            bloqueará automáticamente cualquier intento de reserva
+                            para un turno que inicie en menos de {bufferMinutes} minutos.
+                        </li>
+                        <li>
+                            <strong>Turnos Pasados:</strong> No se permiten reservas
+                            para horarios que ya hayan finalizado.
+                        </li>
+                        <li>
+                            <strong>Cancelaciones:</strong> Para cancelar o reagendar
+                            una cita, solicitamos notificar con una antelación mínima
+                            de 30 minutos. Las reservas canceladas después de este
+                            tiempo pueden estar sujetas a cargos administrativos o
+                            penalización en el sistema de fidelización.
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        4. Comunicación vía WhatsApp
+                    </h3>
+                    <p>
+                        Al confirmar una reserva, nuestro sistema genera un
+                        enlace directo a la API de WhatsApp (wa.me).
+                    </p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>
+                            <strong>Responsabilidad:</strong> Es responsabilidad del
+                            usuario enviar el mensaje generado para activar la notificación
+                            en nuestro sistema operativo.
+                        </li>
+                        <li>
+                            <strong>Privacidad de Chat:</strong> Las conversaciones
+                            mantenidas fuera de nuestra plataforma web (dentro de
+                            la aplicación de WhatsApp) no son almacenadas en nuestros
+                            servidores y son de exclusiva responsabilidad de los usuarios
+                            y Meta.
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        5. Uso de los Datos
+                    </h3>
+                    <p>
+                        Los datos del vehículo (placa) y del cliente se
+                        almacenan en nuestra base de datos segura para ofrecer
+                        un historial de servicios y programas de fidelización.
+                        El usuario autoriza expresamente el tratamiento de sus
+                        datos conforme a nuestra Política de Privacidad.
+                    </p>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-white mb-2">
+                        6. Disponibilidad
+                    </h3>
+                    <p>
+                        Si bien nos esforzamos por mantener el sistema operativo
+                        24/7, no garantizamos la disponibilidad ininterrumpida
+                        del sitio web debido a mantenimiento técnico o fallos de
+                        internet.
+                    </p>
+                </section>
+            </div>
+
+            <div class="mt-12 pt-8 border-t border-white/10">
+                <a
+                    href="/"
+                    class="text-primary-400 hover:text-primary-300 font-medium flex items-center gap-2 transition-colors"
+                >
+                    ← Volver al Inicio
+                </a>
+            </div>
+        </div>
+    </main>
+</Layout>

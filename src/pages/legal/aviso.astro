@@ -1,0 +1,103 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import prisma from "../../lib/prisma";
+
+const settings = await prisma.settings.findUnique({
+    where: { id: "main" },
+});
+
+const businessName = settings?.businessName || "AutoSpa Premium";
+const titular = (settings as any)?.legalTitular || businessName;
+const nif = (settings as any)?.legalNif || "[Tu Número de RUC/Cédula]";
+const address = settings?.address || "[Tu Dirección Física]";
+const email = (settings as any)?.email || "[Tu Email Oficial]";
+---
+
+<Layout title={`Aviso Legal - ${businessName}`}>
+    <main class="min-h-screen bg-luxury-black pt-24 pb-12 px-6">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-4xl font-serif mb-8 text-primary-400">
+                Aviso Legal y Derechos Reservados
+            </h1>
+
+            <div
+                class="prose prose-invert prose-primary max-w-none space-y-6 text-gray-300"
+            >
+                <section
+                    class="bg-white/5 p-6 rounded-xl border border-white/10 mb-8"
+                >
+                    <p class="mb-2"><strong>Titular:</strong> {titular}</p>
+                    <p class="mb-2"><strong>NIF/Cédula:</strong> {nif}</p>
+                    <p class="mb-2"><strong>Domicilio:</strong> {address}</p>
+                    <p>
+                        <strong>Contacto:</strong>
+                        <a
+                            href={`mailto:${email}`}
+                            class="text-primary-400 hover:underline">{email}</a>
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-2xl font-bold text-white mb-4">
+                        1. Propiedad Intelectual
+                    </h2>
+                    <p>
+                        Todo el contenido de este sitio web (diseño, código
+                        fuente, gráficos, logos, textos, bases de datos,
+                        algoritmos de disponibilidad y animaciones) es propiedad
+                        exclusiva de <strong>{titular}</strong> y está protegido por
+                        las leyes de derechos de autor y propiedad intelectual internacionales.
+                    </p>
+                    <p>
+                        Queda prohibida la reproducción, distribución,
+                        modificación o descompilación de cualquier parte del
+                        software sin autorización expresa por escrito.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-2xl font-bold text-white mb-4">
+                        2. Exención de Responsabilidad
+                    </h2>
+                    <p>{businessName} no se hace responsable de:</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>
+                            Errores técnicos en la transmisión de datos causados
+                            por el proveedor de internet del usuario.
+                        </li>
+                        <li>
+                            La imposibilidad de acceder al sistema de reservas
+                            por causas de fuerza mayor.
+                        </li>
+                        <li>
+                            Daños al vehículo derivados del servicio de lavado
+                            (excepto aquellos cubiertos por el seguro de
+                            responsabilidad civil vigente).
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-2xl font-bold text-white mb-4">
+                        3. Legislación Aplicable
+                    </h2>
+                    <p>
+                        El uso de este sitio web y la prestación de los
+                        servicios se rigen por las leyes de la República del
+                        Paraguay. Para cualquier controversia, las partes se
+                        someten a los Juzgados y Tribunales de la capital.
+                    </p>
+                </section>
+            </div>
+
+            <div class="mt-12 pt-8 border-t border-white/10">
+                <a
+                    href="/"
+                    class="text-primary-400 hover:text-primary-300 font-medium flex items-center gap-2 transition-colors"
+                >
+                    ← Volver al Inicio
+                </a>
+            </div>
+        </div>
+    </main>
+</Layout>

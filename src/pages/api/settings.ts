@@ -44,6 +44,12 @@ export const PUT: APIRoute = async ({ request }) => {
             heroImageUrl,
             bookingBufferMinutes,
             timezone,
+            legalTitular,
+            legalNif,
+            email,
+            facebookUrl,
+            instagramUrl,
+            tiktokUrl,
         } = body;
 
         const settings = await prisma.settings.upsert({
@@ -62,6 +68,12 @@ export const PUT: APIRoute = async ({ request }) => {
                 heroImageUrl,
                 bookingBufferMinutes: parseInt(bookingBufferMinutes),
                 timezone,
+                legalTitular,
+                legalNif,
+                email,
+                facebookUrl,
+                instagramUrl,
+                tiktokUrl,
             } as any,
             create: {
                 id: 'main',
@@ -78,6 +90,12 @@ export const PUT: APIRoute = async ({ request }) => {
                 heroImageUrl,
                 bookingBufferMinutes: parseInt(bookingBufferMinutes),
                 timezone,
+                legalTitular,
+                legalNif,
+                email,
+                facebookUrl,
+                instagramUrl,
+                tiktokUrl,
             } as any,
         });
 
