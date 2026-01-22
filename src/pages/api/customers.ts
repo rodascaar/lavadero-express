@@ -20,7 +20,13 @@ export const GET: APIRoute = async ({ url }) => {
         if (search) {
             where.OR = [
                 { name: { contains: search, mode: 'insensitive' } },
-                { plate: { contains: search, mode: 'insensitive' } },
+                {
+                    vehicles: {
+                        some: {
+                            plate: { contains: search, mode: 'insensitive' },
+                        },
+                    },
+                },
                 { phone: { contains: search, mode: 'insensitive' } },
             ];
         }
@@ -28,6 +34,7 @@ export const GET: APIRoute = async ({ url }) => {
         const customers = await prisma.customer.findMany({
             where,
             include: {
+                vehicles: true,
                 bookings: {
                     include: {
                         service: true,

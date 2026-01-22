@@ -8,7 +8,8 @@ Sistema completo de reservas con Astro SSR, PostgreSQL, Prisma ORM, y Tailwind C
 - **Reservas con WhatsApp** - Tickets automáticos via `wa.me/` URL scheme
 - **Dashboard Admin** - KPIs, gráficos, y gestión de reservas
 - **CRM de Clientes** - Historial y clientes frecuentes
-- **Configuración Parametrizable** - Horarios, precios, WhatsApp desde el panel
+- **Scarcity UX (Efecto Museo)** - Visualización de slots ocupados/expirados para fomentar reserva
+- **Configuración Avanzada** - Zona horaria, buffer de corte, y métodos de pago dinámicos
 
 ## 🚀 Inicio Rápido
 
@@ -80,6 +81,8 @@ Toda la configuración del negocio se gestiona desde **Admin → Configuración*
 - Horario de apertura/cierre
 - Duración de turnos (15, 30, 45, 60 min)
 - Días de trabajo
+- **Zona Horaria** (Sincronización de calendario y slots)
+- **Buffer de Corte** (Cierre automático de slots próximos)
 - Nombre y dirección del negocio
 
 ## 🔧 Comandos Útiles

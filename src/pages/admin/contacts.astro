@@ -11,6 +11,7 @@ const customers = await prisma.customer.findMany({
       },
       orderBy: { date: 'desc' },
     },
+    vehicles: true,
   },
   orderBy: { createdAt: 'desc' },
 });
@@ -98,7 +99,7 @@ const customersWithStats = customers.map((customer) => {
         <div 
           class="card p-6 customer-card"
           data-name={customer.name.toLowerCase()}
-          data-plate={customer.plate.toLowerCase()}
+          data-plate={customer.vehicles.map(v => v.plate).join(' ').toLowerCase()}
           data-phone={customer.phone}
         >
           <div class="flex flex-col md:flex-row md:items-center gap-4">
@@ -113,10 +114,14 @@ const customersWithStats = customers.map((customer) => {
                   <h3 class="font-bold text-lg text-slate-900">{customer.name}</h3>
                   {customer.isLoyal && <span class="badge bg-amber-100 text-amber-700">Frecuente</span>}
                 </div>
-                <div class="flex flex-wrap items-center gap-4 text-sm text-slate-600 mt-1">
+                <div class="flex flex-col text-sm text-slate-600 mt-1 gap-1">
                   <span>📱 {customer.phone}</span>
-                  <span>🚗 {customer.plate}</span>
-                  {customer.model && <span>• {customer.model}</span>}
+                  {customer.vehicles.map(v => (
+                      <div class="flex items-center gap-1">
+                          <span class="font-mono bg-slate-100 px-1 rounded">🚗 {v.plate}</span>
+                          {v.model && <span class="text-xs text-slate-400">• {v.model}</span>}
+                      </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -125,13 +130,13 @@ const customersWithStats = customers.map((customer) => {
             <div class="flex items-center gap-6 text-center">
               <div>
                 <div class="text-2xl font-bold text-primary-600">{customer.totalVisits}</div>
-                <div class="text-xs text-slate-500">Visitas</div>
+                <div class="text-xs text-gray-400">Visitas</div>
               </div>
               <div>
                 <div class="text-2xl font-bold text-emerald-600">
                   {new Intl.NumberFormat('es-PY', { notation: 'compact' }).format(customer.totalSpent)} ₲
                 </div>
-                <div class="text-xs text-slate-500">Total Gastado</div>
+                <div class="text-xs text-gray-400">Total Gastado</div>
               </div>
               <div>
                 <div class="text-sm font-medium text-slate-700">

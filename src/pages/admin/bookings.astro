@@ -6,6 +6,7 @@ import prisma from "../../lib/prisma";
 const bookings = await prisma.booking.findMany({
     include: {
         customer: true,
+        vehicle: true,
         service: true,
     },
     orderBy: [{ date: "desc" }, { time: "asc" }],
@@ -85,7 +86,7 @@ const paymentLabels: Record<string, string> = {
                             <tr>
                                 <td
                                     colspan="9"
-                                    class="text-center py-8 text-slate-500"
+                                    class="text-center py-8 text-gray-400"
                                 >
                                     No hay reservas registradas
                                 </td>
@@ -97,7 +98,7 @@ const paymentLabels: Record<string, string> = {
                                     data-status={booking.status}
                                 >
                                     <td>
-                                        <span class="font-mono text-sm font-medium text-primary-600">
+                                        <span class="font-mono text-sm font-medium text-primary-400">
                                             {booking.referenceCode}
                                         </span>
                                     </td>
@@ -111,7 +112,7 @@ const paymentLabels: Record<string, string> = {
                                                 month: "short",
                                             })}
                                         </div>
-                                        <div class="text-slate-500 text-sm">
+                                        <div class="text-gray-400 text-sm">
                                             {booking.time}
                                         </div>
                                     </td>
@@ -119,17 +120,17 @@ const paymentLabels: Record<string, string> = {
                                         <div class="font-medium">
                                             {booking.customer.name}
                                         </div>
-                                        <div class="text-slate-500 text-sm">
+                                        <div class="text-gray-400 text-sm">
                                             {booking.customer.phone}
                                         </div>
                                     </td>
                                     <td>
                                         <div class="font-medium">
-                                            {booking.customer.plate}
+                                            {booking.vehicle?.plate || "-"}
                                         </div>
-                                        {booking.customer.model && (
-                                            <div class="text-slate-500 text-sm">
-                                                {booking.customer.model}
+                                        {booking.vehicle?.model && (
+                                            <div class="text-gray-400 text-sm">
+                                                {booking.vehicle.model}
                                             </div>
                                         )}
                                     </td>
@@ -165,13 +166,83 @@ const paymentLabels: Record<string, string> = {
                                         </select>
                                     </td>
                                     <td>
-                                        <button
-                                            class="btn-delete btn btn-sm text-red-500 hover:bg-red-50"
-                                            data-id={booking.id}
-                                            title="Eliminar"
-                                        >
-                                            🗑️
-                                        </button>
+                                        <div class="flex gap-2">
+                                            {booking.status === "PENDING" && (
+                                                <button
+                                                    class="btn-rescue btn btn-sm bg-primary-600/20 text-primary-400 hover:bg-primary-600 hover:text-white"
+                                                    data-id={booking.id}
+                                                    data-phone={
+                                                        booking.customer.phone
+                                                    }
+                                                    data-name={
+                                                        booking.customer.name
+                                                    }
+                                                    data-code={
+                                                        booking.referenceCode
+                                                    }
+                                                    data-time={booking.time}
+                                                    data-date={new Date(
+                                                        booking.date,
+                                                    ).toLocaleDateString(
+                                                        "es-ES",
+                                                    )}
+                                                    data-plate={
+                                                        booking.vehicle?.plate
+                                                    }
+                                                    data-model={
+                                                        booking.vehicle?.model
+                                                    }
+                                                    data-service={
+                                                        booking.service.name
+                                                    }
+                                                    data-price={Number(
+                                                        booking.totalPrice,
+                                                    )}
+                                                    title="Rescatar Reserva (WhatsApp)"
+                                                >
+                                                    💬 Rescatar
+                                                </button>
+                                            )}
+                                            <button
+                                                class="btn-copy-ticket btn btn-sm border border-white/10 text-gray-400 hover:text-white"
+                                                data-id={booking.id}
+                                                data-payload={JSON.stringify({
+                                                    referenceCode:
+                                                        booking.referenceCode,
+                                                    customerName:
+                                                        booking.customer.name,
+                                                    customerPhone:
+                                                        booking.customer.phone,
+                                                    plate: booking.vehicle
+                                                        ?.plate,
+                                                    vehicleModel:
+                                                        booking.vehicle?.model,
+                                                    serviceName:
+                                                        booking.service.name,
+                                                    date: new Date(
+                                                        booking.date,
+                                                    ).toLocaleDateString(
+                                                        "es-ES",
+                                                    ),
+                                                    time: booking.time,
+                                                    totalPrice: Number(
+                                                        booking.totalPrice,
+                                                    ),
+                                                    paymentMethod:
+                                                        booking.paymentMethod,
+                                                })}
+                                                title="Copiar Ticket"
+                                            >
+                                                📋
+                                            </button>
+                                            <button
+                                                class="btn-delete btn btn-sm text-red-500 hover:bg-red-500/10"
+                                                data-id={booking.id}
+                                                title="Eliminar"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -248,6 +319,52 @@ const paymentLabels: Record<string, string> = {
                 } catch (error) {
                     alert("Error de conexión");
                 }
+            });
+        });
+
+        // Rescue handler (WhatsApp Proactive)
+        document.querySelectorAll(".btn-rescue").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                const target = e.currentTarget as HTMLButtonElement;
+                const name = target.dataset.name;
+                const phone = target.dataset.phone!.replace(/\D/g, "");
+                const time = target.dataset.time;
+
+                // Get business name from settings if possible, or use default
+                const businessName = "AutoSpa Premium";
+                const message = `Hola ${name}, soy de ${businessName}. Vemos que generaste una reserva para hoy a las ${time}. Confirmamos que tu lugar está asegurado. ¿Podrías confirmar si llegas a tiempo?`;
+
+                const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+                window.open(url, "_blank");
+            });
+        });
+
+        // Copy Ticket handler
+        document.querySelectorAll(".btn-copy-ticket").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                const target = e.currentTarget as HTMLButtonElement;
+                const data = JSON.parse(target.dataset.payload!);
+
+                const formattedPrice = new Intl.NumberFormat("es-PY").format(
+                    data.totalPrice,
+                );
+                const ticket = `AUTO SPA PREMIUM - TICKET DE RESERVA
+CÓDIGO : ${data.referenceCode}
+CLIENTE: ${data.customerName}
+VEHÍCULO: ${data.plate}${data.vehicleModel ? ` - ${data.vehicleModel}` : ""}
+FECHA: ${data.date}
+HORA: ${data.time}
+SERVICIO: ${data.serviceName}
+PAGO: ${data.paymentMethod}
+TOTAL: ${formattedPrice} Gs.
+Gracias por su preferencia.`;
+
+                navigator.clipboard.writeText(ticket);
+
+                // Visual feedback
+                const originalText = target.innerText;
+                target.innerText = "✅";
+                setTimeout(() => (target.innerText = "📋"), 2000);
             });
         });
 

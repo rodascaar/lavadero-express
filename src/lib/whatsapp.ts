@@ -12,28 +12,25 @@ interface BookingData {
     currency?: string;
 }
 
-const PAYMENT_METHOD_LABELS: Record<string, string> = {
-    CASH: '💵 Efectivo',
-    TRANSFER: '🏦 Transferencia',
-    QR: '📱 QR',
-    PAYMENT_LINK: '🔗 Link de Pago',
+export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+    CASH: 'Efectivo',
+    TRANSFER: 'Transferencia',
+    QR: 'QR',
+    PAYMENT_LINK: 'Link de Pago',
 };
 
 export function generateWhatsAppUrl(
     whatsappNumber: string,
     booking: BookingData,
-    welcomeMessage?: string
+    businessName: string = 'AUTOSPA PREMIUM',
+    welcomeMessage?: string,
+    isProactive: boolean = false
 ): string {
-    // Clean the phone number - remove all non-numeric except leading +
-    let cleanNumber = whatsappNumber.replace(/[^\d+]/g, '');
-
-    // If starts with +, keep it, otherwise add it
-    if (!cleanNumber.startsWith('+')) {
-        cleanNumber = '+' + cleanNumber;
-    }
-
-    // Remove the + for wa.me URL (it expects number without +)
-    const numberForUrl = cleanNumber.replace('+', '');
+    // Clean the destination number
+    // If proactive, we send TO the customer. If not, customer sends TO business.
+    const targetNumber = isProactive
+        ? booking.customerPhone.replace(/\D/g, '')
+        : whatsappNumber.replace(/\D/g, '');
 
     // Format the price
     const formattedPrice = new Intl.NumberFormat('es-PY', {
@@ -41,32 +38,61 @@ export function generateWhatsAppUrl(
         maximumFractionDigits: 0,
     }).format(booking.totalPrice);
 
-    const currencySymbol = booking.currency === 'USD' ? '$' : '₲';
+    let message = "";
 
-    // Build the ticket message
-    const message = `🚗 *TICKET DE RESERVA* 🚗
-━━━━━━━━━━━━━━━━━━━━━
+    if (isProactive) {
+        message = `Hola ${booking.customerName}, soy de ${businessName}. Vemos que generaste una reserva para hoy a las ${booking.time}. Confirmamos que tu lugar está asegurado. ¿Podrías confirmar si llegas a tiempo?`;
+    } else {
+        // Build the standard ticket message
+        message = `[ ${businessName.toUpperCase()} ]
 
-📋 *Código:* ${booking.referenceCode}
+RESERVA CONFIRMADA
 
-👤 *Cliente:* ${booking.customerName}
-📞 *Teléfono:* ${booking.customerPhone}
-🚙 *Vehículo:* ${booking.plate}${booking.vehicleModel ? ` - ${booking.vehicleModel}` : ''}
+ID   : ${booking.referenceCode}
+----------------------------------
+Nombre   : ${booking.customerName}
+Contacto : ${booking.customerPhone}
+Auto     : ${booking.plate}${booking.vehicleModel ? ` - ${booking.vehicleModel.toUpperCase()}` : ''}
+----------------------------------
+Fecha    : ${booking.date}
+Hora     : ${booking.time}
+Servicio : ${booking.serviceName}
+Pago     : ${booking.paymentMethod}
+----------------------------------
+[ TOTAL : ${formattedPrice} Gs. ]
 
-✨ *Servicio:* ${booking.serviceName}
-📅 *Fecha:* ${booking.date}
-🕐 *Hora:* ${booking.time}
+${welcomeMessage || 'Gracias por elegirnos.'}`;
+    }
 
-💰 *Total:* ${formattedPrice} ${currencySymbol}
-${PAYMENT_METHOD_LABELS[booking.paymentMethod] || booking.paymentMethod}
-
-━━━━━━━━━━━━━━━━━━━━━
-${welcomeMessage || '¡Gracias por tu reserva!'}`;
-
-    // Encode for URL - ensure proper encoding
+    // Encode for URL
     const encodedMessage = encodeURIComponent(message);
 
-    return `https://wa.me/${numberForUrl}?text=${encodedMessage}`;
+    return `https://wa.me/${targetNumber}?text=${encodedMessage}`;
+}
+
+export function generatePlainTicket(
+    booking: BookingData,
+    businessName: string = 'AUTOSPA PREMIUM'
+): string {
+    const formattedPrice = new Intl.NumberFormat('es-PY', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(booking.totalPrice);
+
+    return `[ ${businessName.toUpperCase()} ]
+RESERVA CONFIRMADA
+ID   : ${booking.referenceCode}
+----------------------------------
+Nombre   : ${booking.customerName}
+Contacto : ${booking.customerPhone}
+Auto     : ${booking.plate}${booking.vehicleModel ? ` - ${booking.vehicleModel.toUpperCase()}` : ''}
+----------------------------------
+Fecha    : ${booking.date}
+Hora     : ${booking.time}
+Servicio : ${booking.serviceName}
+Pago     : ${booking.paymentMethod}
+----------------------------------
+[ TOTAL : ${formattedPrice} Gs. ]`;
 }
 
 export function generateReferenceCode(): string {

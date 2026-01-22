@@ -12,30 +12,30 @@ export const GET: APIRoute = async ({ url }) => {
             });
         }
 
-        // Get settings for max slots per time
+        // Get settings
         const settings = await prisma.settings.findUnique({
             where: { id: 'main' },
         });
-        const maxSlots = settings?.maxSlotsPerTime || 1;
+        const maxSlots = (settings as any)?.maxSlotsPerTime || 1;
+        const bufferMinutes = (settings as any)?.bookingBufferMinutes || 10;
+        const slotDuration = (settings as any)?.slotDuration || 30;
+        const openTime = settings?.openTime || '08:00';
+        const closeTime = settings?.closeTime || '18:00';
+
+        const [startHour, startMinute] = openTime.split(':').map(Number);
+        const [endHour, endMinute] = closeTime.split(':').map(Number);
 
         const date = new Date(dateStr);
         const nextDay = new Date(dateStr);
         nextDay.setDate(nextDay.getDate() + 1);
 
-        // Get all bookings for the specified date that are not cancelled
+        // Get all bookings for the specified date
         const bookings = await prisma.booking.findMany({
             where: {
-                date: {
-                    gte: date,
-                    lt: nextDay,
-                },
-                status: {
-                    not: 'CANCELLED',
-                },
+                date: { gte: date, lt: nextDay },
+                status: { not: 'CANCELLED' },
             },
-            select: {
-                time: true,
-            },
+            select: { time: true },
         });
 
         // Count bookings per time slot
@@ -44,15 +44,82 @@ export const GET: APIRoute = async ({ url }) => {
             slotCounts[b.time] = (slotCounts[b.time] || 0) + 1;
         });
 
-        // Find slots that are full (reached maxSlots)
-        const unavailableSlots = Object.entries(slotCounts)
-            .filter(([_, count]) => count >= maxSlots)
-            .map(([time]) => time);
+        // Generate theoretical slots
+        const slots = [];
+        const currentSlotTime = new Date();
+        currentSlotTime.setHours(startHour, startMinute, 0, 0);
+
+        const endSlotTime = new Date();
+        endSlotTime.setHours(endHour, endMinute, 0, 0);
+
+        const timezone = (settings as any)?.timezone || 'America/Asuncion';
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
+
+        const parts = formatter.formatToParts(now);
+        const getPart = (type: string) => parts.find(p => p.type === type)?.value;
+        const bizYear = getPart('year');
+        const bizMonth = getPart('month');
+        const bizDay = getPart('day');
+        const bizHour = Number(getPart('hour'));
+        const bizMinute = Number(getPart('minute'));
+
+        const bizTodayStr = `${bizYear}-${bizMonth}-${bizDay}`;
+        const isToday = dateStr === bizTodayStr;
+        const currentMinutes = bizHour * 60 + bizMinute;
+
+        while (currentSlotTime < endSlotTime) {
+            const timeStr = currentSlotTime.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+            });
+
+            const [h, m] = timeStr.split(':').map(Number);
+            const slotMinutes = h * 60 + m;
+            const count = slotCounts[timeStr] || 0;
+
+            let status = 'AVAILABLE';
+            let reason = '';
+
+            if (isToday) {
+                if (slotMinutes < currentMinutes) {
+                    status = 'PAST';
+                    reason = 'FINALIZADO';
+                } else if ((slotMinutes - currentMinutes) <= bufferMinutes) {
+                    status = 'EXPIRED';
+                    reason = 'CERRADO';
+                }
+            }
+
+            if (status === 'AVAILABLE' && count >= maxSlots) {
+                status = 'FULL';
+                reason = 'COMPLETO';
+            }
+
+            slots.push({
+                time: timeStr,
+                status,
+                reason,
+                count,
+                available: status === 'AVAILABLE'
+            });
+
+            currentSlotTime.setMinutes(currentSlotTime.getMinutes() + slotDuration);
+        }
 
         return new Response(JSON.stringify({
-            unavailableSlots,
+            slots,
             maxSlotsPerTime: maxSlots,
-            slotCounts
+            date: dateStr
         }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },

@@ -1,0 +1,62 @@
+---
+import { ClientRouter } from "astro:transitions";
+
+interface Props {
+    title: string;
+    description?: string;
+}
+
+const {
+    title,
+    description = "Reserva tu experiencia de cuidado automotriz premium.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es" class="scroll-smooth">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="description" content={description} />
+        <meta name="viewport" content="width=device-width" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="generator" content={Astro.generator} />
+
+        <!-- Google Fonts: Playfair Display & Manrope -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+            rel="stylesheet"
+        />
+
+        <title>{title}</title>
+        <ClientRouter />
+    </head>
+    <body
+        class="bg-luxury-black text-white font-sans antialiased selection:bg-primary-500 selection:text-white"
+    >
+        <slot />
+    </body>
+</html>
+
+<style is:global>
+    /* Custom Scrollbar for Luxury Feel */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #050505;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    /* Global utility to prevent overscroll bounce showing white backgrounds */
+    html {
+        background-color: #050505;
+    }
+</style>

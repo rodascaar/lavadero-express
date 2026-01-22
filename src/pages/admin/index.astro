@@ -90,60 +90,107 @@ const statusLabels: Record<string, string> = {
 <AdminLayout title="Dashboard">
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="kpi-card">
-            <div class="flex items-center gap-3 mb-4">
+        <div
+            class="bg-luxury-card border border-white/5 p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-white/10 transition-colors"
+        >
+            <div
+                class="absolute top-0 right-0 w-24 h-24 bg-primary-500/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-primary-500/20 transition-colors"
+            >
+            </div>
+            <div class="flex items-center gap-4 mb-4 relative z-10">
                 <div
-                    class="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center text-2xl"
+                    class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl border border-white/10 group-hover:scale-110 transition-transform"
                 >
                     📅
                 </div>
                 <div>
-                    <div class="kpi-value">{todayBookings.length}</div>
-                    <div class="kpi-label">Reservas Hoy</div>
+                    <div class="text-3xl font-bold text-white font-heading">
+                        {todayBookings.length}
+                    </div>
+                    <div
+                        class="text-xs text-gray-400 font-technical uppercase tracking-widest"
+                    >
+                        Reservas Hoy
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="kpi-card">
-            <div class="flex items-center gap-3 mb-4">
+        <div
+            class="bg-luxury-card border border-white/5 p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-white/10 transition-colors"
+        >
+            <div
+                class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/20 transition-colors"
+            >
+            </div>
+            <div class="flex items-center gap-4 mb-4 relative z-10">
                 <div
-                    class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-2xl"
+                    class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl border border-white/10 group-hover:scale-110 transition-transform"
                 >
                     💰
                 </div>
                 <div>
-                    <div class="kpi-value">
-                        {new Intl.NumberFormat("es-PY").format(todayRevenue)} ₲
+                    <div class="text-3xl font-bold text-white font-heading">
+                        {new Intl.NumberFormat("es-PY").format(todayRevenue)}
+                        <span class="text-base text-gray-400">₲</span>
                     </div>
-                    <div class="kpi-label">Ingresos Hoy</div>
+                    <div
+                        class="text-xs text-gray-400 font-technical uppercase tracking-widest"
+                    >
+                        Ingresos Hoy
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="kpi-card">
-            <div class="flex items-center gap-3 mb-4">
+        <div
+            class="bg-luxury-card border border-white/5 p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-white/10 transition-colors"
+        >
+            <div
+                class="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-amber-500/20 transition-colors"
+            >
+            </div>
+            <div class="flex items-center gap-4 mb-4 relative z-10">
                 <div
-                    class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl"
+                    class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl border border-white/10 group-hover:scale-110 transition-transform"
                 >
                     ⏳
                 </div>
                 <div>
-                    <div class="kpi-value">{pendingCount}</div>
-                    <div class="kpi-label">Pendientes</div>
+                    <div class="text-3xl font-bold text-white font-heading">
+                        {pendingCount}
+                    </div>
+                    <div
+                        class="text-xs text-gray-400 font-technical uppercase tracking-widest"
+                    >
+                        Pendientes
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="kpi-card">
-            <div class="flex items-center gap-3 mb-4">
+        <div
+            class="bg-luxury-card border border-white/5 p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-white/10 transition-colors"
+        >
+            <div
+                class="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-teal-500/20 transition-colors"
+            >
+            </div>
+            <div class="flex items-center gap-4 mb-4 relative z-10">
                 <div
-                    class="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center text-2xl"
+                    class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl border border-white/10 group-hover:scale-110 transition-transform"
                 >
                     ✅
                 </div>
                 <div>
-                    <div class="kpi-value">{weekBookings.length}</div>
-                    <div class="kpi-label">Completados (7 días)</div>
+                    <div class="text-3xl font-bold text-white font-heading">
+                        {weekBookings.length}
+                    </div>
+                    <div
+                        class="text-xs text-gray-400 font-technical uppercase tracking-widest"
+                    >
+                        Completados (7d)
+                    </div>
                 </div>
             </div>
         </div>
@@ -151,41 +198,65 @@ const statusLabels: Record<string, string> = {
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Chart -->
-        <div class="lg:col-span-2 card p-6">
-            <h3 class="text-lg font-bold text-slate-900 mb-4">
+        <div
+            class="lg:col-span-2 bg-luxury-card border border-white/5 p-6 rounded-2xl shadow-lg"
+        >
+            <h3
+                class="text-lg font-bold font-heading text-white mb-6 flex items-center gap-2"
+            >
+                <span class="w-1 h-6 bg-primary-500 rounded-full"></span>
                 Ingresos - Últimos 7 días
             </h3>
-            <div id="chart-container" class="h-64">
+            <div id="chart-container" class="h-80 w-full">
                 <canvas id="revenue-chart"></canvas>
             </div>
         </div>
 
         <!-- Recent Activity -->
-        <div class="card p-6">
-            <h3 class="text-lg font-bold text-slate-900 mb-4">
+        <div
+            class="bg-luxury-card border border-white/5 p-6 rounded-2xl shadow-lg flex flex-col"
+        >
+            <h3
+                class="text-lg font-bold font-heading text-white mb-6 flex items-center gap-2"
+            >
+                <span class="w-1 h-6 bg-primary-500 rounded-full"></span>
                 Actividad Reciente
             </h3>
-            <div class="space-y-4">
+            <div
+                class="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar"
+            >
                 {
                     recentBookings.length === 0 ? (
-                        <p class="text-slate-500 text-center py-8">
-                            No hay reservas recientes
+                        <p class="text-gray-400 text-center py-8 font-technical text-sm uppercase tracking-widest">
+                            No hay actividad reciente
                         </p>
                     ) : (
                         recentBookings.map((booking) => (
-                            <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
-                                <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center font-bold text-primary-600">
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors group">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-900 to-black border border-white/10 flex items-center justify-center font-bold text-primary-500 text-sm">
                                     {booking.customer.name.charAt(0)}
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="font-medium text-slate-900 truncate">
+                                    <p class="font-medium text-white truncate group-hover:text-primary-400 transition-colors font-sans">
                                         {booking.customer.name}
                                     </p>
-                                    <p class="text-sm text-slate-500">
+                                    <p class="text-xs text-gray-400 font-technical">
                                         {booking.service.name}
                                     </p>
                                 </div>
-                                <span class={statusColors[booking.status]}>
+                                <span
+                                    class={`px-2 py-1 rounded text-[10px] font-technical uppercase tracking-widest border ${
+                                        booking.status === "PENDING"
+                                            ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                            : booking.status === "CONFIRMED"
+                                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                              : booking.status === "IN_PROGRESS"
+                                                ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                                                : booking.status === "COMPLETED"
+                                                  ? "bg-teal-500/10 text-teal-500 border-teal-500/20"
+                                                  : "bg-red-500/10 text-red-500 border-red-500/20"
+                                    }`}
+                                >
                                     {statusLabels[booking.status]}
                                 </span>
                             </div>
@@ -193,43 +264,75 @@ const statusLabels: Record<string, string> = {
                     )
                 }
             </div>
-            <a href="/admin/bookings" class="btn btn-secondary w-full mt-4">
+            <a
+                href="/admin/bookings"
+                class="w-full mt-6 py-3 text-center text-xs font-technical uppercase tracking-widest text-gray-400 hover:text-white border border-white/10 hover:bg-white/5 rounded-xl transition-all"
+            >
                 Ver todas las reservas →
             </a>
         </div>
     </div>
 
     <!-- Today's Schedule -->
-    <div class="card p-6 mt-6">
-        <h3 class="text-lg font-bold text-slate-900 mb-4">Agenda de Hoy</h3>
+    <div
+        class="bg-luxury-card border border-white/5 p-6 rounded-2xl shadow-lg mt-6"
+    >
+        <h3
+            class="text-lg font-bold font-heading text-white mb-6 flex items-center gap-2"
+        >
+            <span class="w-1 h-6 bg-primary-500 rounded-full"></span>
+            Agenda de Hoy
+        </h3>
         {
             todayBookings.length === 0 ? (
-                <p class="text-slate-500 text-center py-8">
-                    No hay reservas para hoy
-                </p>
+                <div class="text-center py-12 border border-dashed border-white/10 rounded-xl">
+                    <span class="text-4xl block mb-2 opacity-20">📅</span>
+                    <p class="text-gray-400 font-technical text-sm uppercase tracking-widest">
+                        No hay reservas programadas para hoy
+                    </p>
+                </div>
             ) : (
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {todayBookings
                         .sort((a, b) => a.time.localeCompare(b.time))
                         .map((booking) => (
-                            <div class="p-4 rounded-xl border border-slate-200 hover:border-primary-300 transition-colors">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xl font-bold text-primary-600">
+                            <div class="p-5 rounded-xl bg-white/5 border border-white/5 hover:border-primary-500/30 transition-all hover:-translate-y-1 group">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-xl font-bold font-technical text-white group-hover:text-primary-500 transition-colors">
                                         {booking.time}
                                     </span>
-                                    <span class={statusColors[booking.status]}>
+                                    <span
+                                        class={`px-2 py-1 rounded text-[10px] font-technical uppercase tracking-widest border ${
+                                            booking.status === "PENDING"
+                                                ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                                : booking.status === "CONFIRMED"
+                                                  ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                                  : booking.status ===
+                                                      "IN_PROGRESS"
+                                                    ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                                                    : booking.status ===
+                                                        "COMPLETED"
+                                                      ? "bg-teal-500/10 text-teal-500 border-teal-500/20"
+                                                      : "bg-red-500/10 text-red-500 border-red-500/20"
+                                        }`}
+                                    >
                                         {statusLabels[booking.status]}
                                     </span>
                                 </div>
-                                <p class="font-medium text-slate-900">
+                                <p class="font-medium text-gray-200 font-heading text-lg mb-1">
                                     {booking.service.name}
                                 </p>
-                                <p class="text-sm text-slate-500">
-                                    {new Intl.NumberFormat("es-PY").format(
-                                        Number(booking.totalPrice),
-                                    )}{" "}
-                                    ₲
-                                </p>
+                                <div class="flex justify-between items-end">
+                                    <p class="text-xs text-gray-400 font-technical uppercase tracking-wide">
+                                        Total
+                                    </p>
+                                    <p class="text-primary-400 font-technical font-bold">
+                                        {new Intl.NumberFormat("es-PY").format(
+                                            Number(booking.totalPrice),
+                                        )}{" "}
+                                        ₲
+                                    </p>
+                                </div>
                             </div>
                         ))}
                 </div>
@@ -258,10 +361,10 @@ const statusLabels: Record<string, string> = {
                             {
                                 label: "Ingresos",
                                 data: chartData.map((d) => d.amount),
-                                backgroundColor: "rgba(59, 130, 246, 0.5)",
-                                borderColor: "rgb(59, 130, 246)",
-                                borderWidth: 1,
-                                borderRadius: 8,
+                                backgroundColor: "rgba(220, 38, 38, 0.8)", // Primary Red
+                                hoverBackgroundColor: "rgba(220, 38, 38, 1)",
+                                borderRadius: 4,
+                                barThickness: 20,
                             },
                         ],
                     },
@@ -270,14 +373,58 @@ const statusLabels: Record<string, string> = {
                         maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
+                            tooltip: {
+                                backgroundColor: "rgba(5, 5, 5, 0.9)",
+                                titleColor: "#fff",
+                                bodyColor: "#ccc",
+                                borderColor: "rgba(255,255,255,0.1)",
+                                borderWidth: 1,
+                                padding: 10,
+                                titleFont: { family: "Manrope", size: 14 },
+                                bodyFont: { family: "Montserrat", size: 12 },
+                                displayColors: false,
+                                callbacks: {
+                                    label: function (context) {
+                                        let label = context.dataset.label || "";
+                                        if (label) {
+                                            label += ": ";
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label +=
+                                                new Intl.NumberFormat(
+                                                    "es-PY",
+                                                ).format(context.parsed.y) +
+                                                " ₲";
+                                        }
+                                        return label;
+                                    },
+                                },
+                            },
                         },
                         scales: {
                             y: {
                                 beginAtZero: true,
+                                grid: {
+                                    color: "rgba(255, 255, 255, 0.05)",
+                                    drawBorder: false,
+                                },
                                 ticks: {
+                                    color: "#6b7280",
+                                    font: { family: "Montserrat", size: 10 },
                                     callback: (value) =>
                                         value.toLocaleString("es-PY") + " ₲",
                                 },
+                                border: { display: false },
+                            },
+                            x: {
+                                grid: {
+                                    display: false,
+                                },
+                                ticks: {
+                                    color: "#9ca3af",
+                                    font: { family: "Montserrat", size: 11 },
+                                },
+                                border: { display: false },
                             },
                         },
                     },

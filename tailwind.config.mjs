@@ -4,18 +4,37 @@ export default {
     theme: {
         extend: {
             colors: {
-                // Brand colors
+                // Luxury Palette
+                luxury: {
+                    black: '#050505',
+                    dark: '#111111',
+                    card: 'rgba(255, 255, 255, 0.03)',
+                    border: 'rgba(255, 255, 255, 0.1)',
+                },
+                // Brand colors (Refined)
                 primary: {
-                    50: '#eff6ff',
-                    100: '#dbeafe',
-                    200: '#bfdbfe',
-                    300: '#93c5fd',
-                    400: '#60a5fa',
-                    500: '#3b82f6',
-                    600: '#2563eb',
-                    700: '#1d4ed8',
-                    800: '#1e40af',
-                    900: '#1e3a8a',
+                    50: '#fef2f2',
+                    100: '#ffe1e1',
+                    200: '#ffc9c9',
+                    300: '#fra3a3',
+                    400: '#fc6d6d',
+                    500: '#ef4444', // Red base
+                    600: '#dc2626', // Rosso Corsa vibes
+                    700: '#b91c1c',
+                    800: '#991b1b',
+                    900: '#7f1d1d',
+                    950: '#450a0a',
+                },
+                chrome: {
+                    100: '#f5f5f5',
+                    200: '#e5e5e5',
+                    300: '#d4d4d4',
+                    400: '#a3a3a3',
+                    500: '#737373',
+                    600: '#525252',
+                    700: '#404040',
+                    800: '#262626',
+                    900: '#171717',
                 },
                 // Status colors
                 status: {
@@ -27,8 +46,13 @@ export default {
                 }
             },
             fontFamily: {
-                sans: ['Inter', 'system-ui', 'sans-serif'],
+                heading: ['"Playfair Display"', 'serif'],
+                sans: ['"Manrope"', 'sans-serif'],
+                technical: ['"Montserrat"', 'sans-serif'],
             },
+            backgroundImage: {
+                'hero-pattern': "url('/patterns/carbon.png')", // Placeholder or remove if using CSS only
+            }
         },
     },
     plugins: [],

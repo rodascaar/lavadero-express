@@ -2,26 +2,16 @@ import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = 'lavadero-admin-secret-key-2024';
 
+import { signToken, verifyToken } from './jwt';
+
 export function createSession(email: string): string {
-    const payload = {
-        email,
-        exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-    };
-    // Simple base64 encoding for demo (use proper JWT in production)
-    const encoded = btoa(JSON.stringify(payload));
-    return encoded;
+    return signToken({ email, role: 'admin' });
 }
 
 export function verifySession(token: string): { email: string } | null {
-    try {
-        const decoded = JSON.parse(atob(token));
-        if (decoded.exp < Date.now()) {
-            return null;
-        }
-        return { email: decoded.email };
-    } catch {
-        return null;
-    }
+    const payload = verifyToken(token);
+    if (!payload) return null;
+    return { email: payload.email };
 }
 
 export async function hashPassword(password: string): Promise<string> {

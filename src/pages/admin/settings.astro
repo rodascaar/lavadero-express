@@ -73,6 +73,48 @@ const dayLabels = [
                         >
                     </select>
                 </div>
+
+                <div>
+                    <label class="label">Zona Horaria</label>
+                    <select name="timezone" class="input">
+                        <option
+                            value="America/Asuncion"
+                            selected={(settings as any).timezone ===
+                                "America/Asuncion"}>Paraguay / Asunción</option
+                        >
+                        <option
+                            value="America/Argentina/Buenos_Aires"
+                            selected={(settings as any).timezone ===
+                                "America/Argentina/Buenos_Aires"}
+                            >Argentina / Buenos Aires</option
+                        >
+                        <option
+                            value="America/Sao_Paulo"
+                            selected={(settings as any).timezone ===
+                                "America/Sao_Paulo"}>Brasil / São Paulo</option
+                        >
+                        <option
+                            value="UTC"
+                            selected={(settings as any).timezone === "UTC"}
+                            >UTC</option
+                        >
+                    </select>
+                </div>
+
+                <div>
+                    <label class="label">Banner de Inicio (URL de imagen)</label
+                    >
+                    <input
+                        type="url"
+                        name="heroImageUrl"
+                        class="input"
+                        value={settings.heroImageUrl || ""}
+                        placeholder="https://images.unsplash.com/..."
+                    />
+                    <p class="text-sm text-gray-400 mt-1">
+                        URL de la imagen de fondo para la sección principal.
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -96,7 +138,7 @@ const dayLabels = [
                         value={settings.whatsappNumber}
                         placeholder="+595991234567"
                     />
-                    <p class="text-sm text-slate-500 mt-1">
+                    <p class="text-sm text-gray-400 mt-1">
                         Este número recibirá los tickets de reserva. Formato:
                         +595XXXXXXXXX
                     </p>
@@ -111,7 +153,7 @@ const dayLabels = [
                         placeholder="¡Gracias por reservar con nosotros!"
                         >{settings.welcomeMessage}</textarea
                     >
-                    <p class="text-sm text-slate-500 mt-1">
+                    <p class="text-sm text-gray-400 mt-1">
                         Este mensaje aparece al final del ticket de WhatsApp
                     </p>
                 </div>
@@ -176,6 +218,24 @@ const dayLabels = [
                 </div>
 
                 <div>
+                    <label class="label"
+                        >Tiempo de corte/reserva (minutos)</label
+                    >
+                    <input
+                        type="number"
+                        name="bookingBufferMinutes"
+                        class="input"
+                        value={(settings as any).bookingBufferMinutes}
+                        min="0"
+                        placeholder="10"
+                    />
+                    <p class="text-sm text-gray-400 mt-1">
+                        Minutos antes del turno en los que ya no se permite
+                        reservar (ej: 10 min).
+                    </p>
+                </div>
+
+                <div>
                     <label class="label">Capacidad por horario</label>
                     <select name="maxSlotsPerTime" class="input">
                         <option
@@ -204,7 +264,7 @@ const dayLabels = [
                             >5 vehículos</option
                         >
                     </select>
-                    <p class="text-sm text-slate-500 mt-1">
+                    <p class="text-sm text-gray-400 mt-1">
                         Cuántos vehículos pueden atenderse simultáneamente en
                         cada horario
                     </p>
@@ -216,7 +276,7 @@ const dayLabels = [
                         {
                             dayLabels.map((day, index) => (
                                 <label
-                                    class={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${workingDays.includes(index) ? "border-primary-500 bg-primary-50" : "border-slate-200 hover:border-primary-300"}`}
+                                    class={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${workingDays.includes(index) ? "border-primary-500 bg-primary-500/20 text-white" : "border-white/10 hover:border-primary-500/50 text-gray-400"}`}
                                 >
                                     <input
                                         type="checkbox"
@@ -231,6 +291,49 @@ const dayLabels = [
                         }
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="card p-6">
+            <h3
+                class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"
+            >
+                💳 Métodos de Pago
+            </h3>
+
+            <div class="space-y-4">
+                <div
+                    id="payment-methods-list"
+                    class="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                >
+                    <!-- Methods will be loaded here -->
+                    <div
+                        class="animate-pulse col-span-2 text-center py-4 text-gray-400"
+                    >
+                        Cargando métodos de pago...
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-4 border-t border-white/5">
+                    <input
+                        type="text"
+                        id="new-payment-method"
+                        class="input flex-1"
+                        placeholder="Nuevo método (ej: Transferencia)"
+                    />
+                    <button
+                        type="button"
+                        id="btn-add-payment-method"
+                        class="btn btn-secondary px-4"
+                    >
+                        ➕ Añadir
+                    </button>
+                </div>
+                <p class="text-sm text-gray-400 mt-1">
+                    Estos métodos aparecerán en el widget de reserva para los
+                    clientes.
+                </p>
             </div>
         </div>
 
@@ -280,6 +383,9 @@ const dayLabels = [
                 maxSlotsPerTime: parseInt(
                     formData.get("maxSlotsPerTime") as string,
                 ),
+                heroImageUrl: formData.get("heroImageUrl"),
+                bookingBufferMinutes: formData.get("bookingBufferMinutes"),
+                timezone: formData.get("timezone"),
                 workingDays,
             };
 
@@ -306,5 +412,123 @@ const dayLabels = [
                 saveBtn.textContent = "💾 Guardar Cambios";
             }
         });
+
+        // Payment Methods Management
+        const methodsList = document.getElementById("payment-methods-list");
+        const newMethodInput = document.getElementById(
+            "new-payment-method",
+        ) as HTMLInputElement;
+        const addMethodBtn = document.getElementById("btn-add-payment-method");
+
+        async function loadPaymentMethods() {
+            try {
+                const response = await fetch("/api/admin/payment-methods");
+                if (response.ok) {
+                    const methods = await response.json();
+                    renderMethods(methods);
+                }
+            } catch (error) {
+                console.error("Error loading methods:", error);
+            }
+        }
+
+        function renderMethods(methods: any[]) {
+            if (!methodsList) return;
+            methodsList.innerHTML =
+                methods
+                    .map(
+                        (method) => `
+                <div class="flex items-center justify-between p-3 rounded-lg border border-white/10 bg-white/5">
+                    <span class="text-sm font-medium ${method.active ? "text-white" : "text-gray-500 line-through"}">${method.name}</span>
+                    <div class="flex gap-2">
+                        <button type="button" class="btn-toggle-method p-1 text-gray-400 hover:text-primary-500" data-id="${method.id}" data-active="${method.active}" title="${method.active ? "Desactivar" : "Activar"}">
+                            ${method.active ? "👁️" : "🕶️"}
+                        </button>
+                        <button type="button" class="btn-delete-method p-1 text-gray-400 hover:text-red-500" data-id="${method.id}" title="Eliminar">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `,
+                    )
+                    .join("") ||
+                '<div class="col-span-2 text-center py-4 text-gray-500">No hay métodos de pago configurados</div>';
+
+            // Re-attach event listeners
+            document.querySelectorAll(".btn-toggle-method").forEach((btn) => {
+                btn.addEventListener("click", async (e) => {
+                    const target = e.currentTarget as HTMLButtonElement;
+                    const id = target.dataset.id;
+                    const active = target.dataset.active === "true";
+                    await updateMethod(id!, { active: !active });
+                });
+            });
+
+            document.querySelectorAll(".btn-delete-method").forEach((btn) => {
+                btn.addEventListener("click", async (e) => {
+                    const target = e.currentTarget as HTMLButtonElement;
+                    const id = target.dataset.id;
+                    if (
+                        confirm(
+                            "¿Estás seguro de eliminar este método de pago?",
+                        )
+                    ) {
+                        await deleteMethod(id!);
+                    }
+                });
+            });
+        }
+
+        async function updateMethod(id: string, data: any) {
+            try {
+                const response = await fetch(
+                    `/api/admin/payment-methods/${id}`,
+                    {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(data),
+                    },
+                );
+                if (response.ok) loadPaymentMethods();
+            } catch (error) {
+                alert("Error al actualizar método");
+            }
+        }
+
+        async function deleteMethod(id: string) {
+            try {
+                const response = await fetch(
+                    `/api/admin/payment-methods/${id}`,
+                    {
+                        method: "DELETE",
+                    },
+                );
+                if (response.ok) loadPaymentMethods();
+            } catch (error) {
+                alert("Error al eliminar método");
+            }
+        }
+
+        addMethodBtn?.addEventListener("click", async () => {
+            const name = newMethodInput.value.trim();
+            if (!name) return;
+
+            try {
+                const response = await fetch("/api/admin/payment-methods", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name }),
+                });
+                if (response.ok) {
+                    newMethodInput.value = "";
+                    loadPaymentMethods();
+                }
+            } catch (error) {
+                alert("Error al añadir método");
+            }
+        });
+
+        // Initialize
+        loadPaymentMethods();
     </script>
 </AdminLayout>

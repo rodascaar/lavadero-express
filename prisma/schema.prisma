@@ -33,12 +33,22 @@ enum Role {
 model Customer {
   id        String    @id @default(cuid())
   name      String
-  phone     String
-  plate     String    @unique
-  model     String?
+  phone     String    @unique
+  vehicles  Vehicle[]
   bookings  Booking[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model Vehicle {
+  id         String    @id @default(cuid())
+  plate      String    @unique
+  model      String?
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  bookings   Booking[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 // ======================================
@@ -68,12 +78,15 @@ model Booking {
   date          DateTime      @db.Date
   time          String        // HH:mm format
   status        BookingStatus @default(PENDING)
-  paymentMethod PaymentMethod
+  paymentMethod String
   notes         String?
   totalPrice    Decimal       @db.Decimal(10, 2)
 
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id])
+
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
 
   serviceId String
   service   Service @relation(fields: [serviceId], references: [id])
@@ -84,6 +97,7 @@ model Booking {
   @@index([date])
   @@index([status])
   @@index([customerId])
+  @@index([vehicleId])
 }
 
 enum BookingStatus {
@@ -94,11 +108,12 @@ enum BookingStatus {
   CANCELLED
 }
 
-enum PaymentMethod {
-  CASH
-  TRANSFER
-  QR
-  PAYMENT_LINK
+model PaymentMethod {
+  id        String   @id @default(cuid())
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ======================================
@@ -117,6 +132,9 @@ model Settings {
   address        String?
   welcomeMessage String  @default("¡Gracias por reservar con nosotros!")
   currency       String  @default("PYG")
+  heroImageUrl   String?
+  bookingBufferMinutes Int @default(10)
+  timezone       String  @default("America/Asuncion")
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

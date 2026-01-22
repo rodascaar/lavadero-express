@@ -41,6 +41,9 @@ export const PUT: APIRoute = async ({ request }) => {
             address,
             welcomeMessage,
             currency,
+            heroImageUrl,
+            bookingBufferMinutes,
+            timezone,
         } = body;
 
         const settings = await prisma.settings.upsert({
@@ -56,7 +59,10 @@ export const PUT: APIRoute = async ({ request }) => {
                 address,
                 welcomeMessage,
                 currency,
-            },
+                heroImageUrl,
+                bookingBufferMinutes: parseInt(bookingBufferMinutes),
+                timezone,
+            } as any,
             create: {
                 id: 'main',
                 businessName,
@@ -69,7 +75,10 @@ export const PUT: APIRoute = async ({ request }) => {
                 address,
                 welcomeMessage,
                 currency,
-            },
+                heroImageUrl,
+                bookingBufferMinutes: parseInt(bookingBufferMinutes),
+                timezone,
+            } as any,
         });
 
         return new Response(JSON.stringify(settings), {

@@ -1,7 +1,8 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
+import Layout from "../layouts/Layout.astro";
 import prisma from "../lib/prisma";
 import { BookingWidget } from "../components/BookingWidget";
+import { InstructionModal } from "../components/InstructionModal";
 
 // Fetch services and settings from DB
 const services = await prisma.service.findMany({
@@ -30,259 +31,255 @@ const settingsData = {
     openTime: settings?.openTime || "08:00",
     closeTime: settings?.closeTime || "18:00",
     slotDuration: settings?.slotDuration || 30,
-    workingDays: settings?.workingDays?.split(",").map(Number) || [
-        1, 2, 3, 4, 5, 6,
-    ],
+    workingDays: settings?.workingDays
+        ? settings.workingDays.split(",").map(Number)
+        : [1, 2, 3, 4, 5, 6],
     welcomeMessage: settings?.welcomeMessage || "¡Gracias por tu reserva!",
     currency: settings?.currency || "PYG",
+    heroImageUrl: settings?.heroImageUrl,
+    timezone: settings?.timezone || "America/Asuncion",
 };
 ---
 
-<BaseLayout title={`Reserva tu cita - ${businessName}`}>
-    <div
-        class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+<Layout title={`${businessName} | El Arte del Cuidado`}>
+    <InstructionModal client:load />
+    <!-- Hero Section -->
+    <section
+        class="relative h-screen flex items-center justify-center overflow-hidden"
     >
-        <!-- Hero Section -->
-        <header class="relative overflow-hidden">
-            <!-- Animated background -->
-            <div class="absolute inset-0">
-                <div
-                    class="absolute inset-0 bg-[url('/hero-pattern.svg')] opacity-20"
-                >
-                </div>
-                <div
-                    class="absolute top-20 left-10 w-72 h-72 bg-primary-500/30 rounded-full blur-3xl animate-pulse"
-                >
-                </div>
-                <div
-                    class="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse"
-                    style="animation-delay: 1s;"
-                >
-                </div>
-            </div>
-
-            <nav class="relative z-10 container mx-auto px-4 py-6">
-                <div class="flex items-center justify-center">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30"
-                        >
-                            <span class="text-2xl">🚗</span>
-                        </div>
-                        <span class="text-2xl font-bold text-white"
-                            >{businessName}</span
-                        >
-                    </div>
-                </div>
-            </nav>
-
+        <!-- Background Image with Overlay -->
+        <div class="absolute inset-0 z-0">
             <div
-                class="relative z-10 container mx-auto px-4 py-12 sm:py-20 text-center"
+                class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-luxury-black z-10"
             >
-                <div
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-primary-300 text-sm mb-6"
-                >
-                    <span
-                        class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"
-                    ></span>
-                    Reservas disponibles ahora
-                </div>
-
-                <h1
-                    class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-6 leading-tight"
-                >
-                    Tu auto merece el
-                    <br class="hidden sm:block" />
-                    <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-cyan-400 to-primary-400 animate-pulse"
-                    >
-                        mejor cuidado
-                    </span>
-                </h1>
-                <p
-                    class="text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl mx-auto"
-                >
-                    Reserva tu lavado profesional en segundos y recibe
-                    confirmación instantánea por WhatsApp
-                </p>
-                <a
-                    href="#reservar"
-                    class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-2xl shadow-xl shadow-primary-500/30 hover:shadow-2xl hover:shadow-primary-500/40 hover:-translate-y-1 transition-all duration-300"
-                >
-                    Reservar Ahora
-                    <span class="text-xl">→</span>
-                </a>
-
-                <!-- Trust indicators -->
-                <div
-                    class="flex flex-wrap items-center justify-center gap-6 mt-12 text-slate-400 text-sm"
-                >
-                    <div class="flex items-center gap-2">
-                        <span class="text-emerald-400">✓</span> Sin esperas
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-emerald-400">✓</span> Confirmación inmediata
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-emerald-400">✓</span> Servicio premium
-                    </div>
-                </div>
             </div>
+            <!-- Placeholder for high-end car wash image - using a dark abstract luxury texture if specific image not available, or standard random car image -->
+            <img
+                src={settingsData.heroImageUrl ||
+                    "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?q=80&w=2600&auto=format&fit=crop"}
+                alt="Proceso de lavado de lujo"
+                class="w-full h-full object-cover opacity-60 scale-105 animate-slow-zoom"
+            />
+        </div>
 
-            <!-- Decorative wave -->
-            <div class="absolute bottom-0 left-0 right-0">
-                <svg
-                    viewBox="0 0 1440 120"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-full"
+        <!-- Content -->
+        <div class="relative z-20 text-center px-4 max-w-5xl mx-auto mt-[-5vh]">
+            <p
+                class="text-primary-500 font-bold uppercase tracking-[0.3em] text-sm md:text-base mb-6 animate-fade-in-up"
+            >
+                Servicio Exclusivo de Detailing
+            </p>
+            <h1
+                class="font-heading text-5xl md:text-7xl lg:text-8xl text-white font-medium tracking-tight mb-8 leading-tight animate-fade-in-up delay-100"
+            >
+                EL ARTE DEL <br />
+                <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500"
+                    >CUIDADO AUTOMOTRIZ</span
                 >
-                    <path
-                        d="M0 120L60 110C120 100 240 80 360 75C480 70 600 80 720 85C840 90 960 90 1080 85C1200 80 1320 70 1380 65L1440 60V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
-                        fill="#f8fafc"></path>
-                </svg>
-            </div>
-        </header>
+            </h1>
+            <p
+                class="font-sans text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-12 font-light leading-relaxed animate-fade-in-up delay-200"
+            >
+                Experimenta la perfección en cada detalle. Tecnología de
+                vanguardia y pasión por la estética para vehículos que merecen
+                lo mejor.
+            </p>
 
-        <!-- Services Section -->
-        <section class="bg-slate-50 py-12 sm:py-16">
-            <div class="container mx-auto px-4">
-                <div class="text-center mb-10 sm:mb-12">
-                    <span
-                        class="inline-block px-4 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium mb-4"
-                    >
-                        Servicios Premium
-                    </span>
-                    <h2 class="text-3xl sm:text-4xl font-bold text-slate-900">
-                        Nuestros Servicios
-                    </h2>
-                    <p class="text-slate-600 mt-3 max-w-xl mx-auto">
-                        Desde lavado express hasta detailing profesional
-                        completo
-                    </p>
-                </div>
-
-                <div
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto"
+            <a
+                href="#reservar"
+                class="group relative inline-flex items-center gap-3 px-8 py-4 bg-primary-600 text-white font-sans font-semibold tracking-wide rounded-sm overflow-hidden transition-all hover:bg-primary-500 animate-fade-in-up delay-300"
+            >
+                <span class="relative z-10">RESERVAR ESPACIO</span>
+                <span
+                    class="relative z-10 group-hover:translate-x-1 transition-transform duration-300"
+                    >→</span
                 >
-                    {
-                        services.map((service, index) => {
-                            const gradients = [
-                                "from-blue-500 to-cyan-500",
-                                "from-purple-500 to-pink-500",
-                                "from-amber-500 to-orange-500",
-                                "from-emerald-500 to-teal-500",
-                                "from-rose-500 to-red-500",
-                            ];
-                            const icons = ["💧", "✨", "👑", "🧹", "🌟"];
-                            const bgColors = [
-                                "bg-blue-50",
-                                "bg-purple-50",
-                                "bg-amber-50",
-                                "bg-emerald-50",
-                                "bg-rose-50",
-                            ];
+            </a>
+        </div>
 
-                            return (
-                                <div
-                                    class="group relative bg-white rounded-2xl p-5 sm:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden"
-                                    style={`animation-delay: ${index * 100}ms`}
-                                >
-                                    <div
-                                        class={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${gradients[index % 5]} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:opacity-20 transition-opacity`}
-                                    />
-
-                                    <div
-                                        class={`w-14 h-14 ${bgColors[index % 5]} rounded-2xl flex items-center justify-center text-3xl mb-4`}
-                                    >
-                                        {icons[index % 5]}
-                                    </div>
-
-                                    <h3 class="text-xl font-bold text-slate-900 mb-2">
-                                        {service.name}
-                                    </h3>
-                                    <p class="text-slate-600 text-sm mb-4 line-clamp-2">
-                                        {service.description}
-                                    </p>
-
-                                    <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                                        <span
-                                            class={`text-2xl font-bold bg-gradient-to-r ${gradients[index % 5]} bg-clip-text text-transparent`}
-                                        >
-                                            {new Intl.NumberFormat(
-                                                "es-PY",
-                                            ).format(
-                                                Number(service.price),
-                                            )}{" "}
-                                            ₲
-                                        </span>
-                                        <span class="text-sm text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
-                                            {service.duration} min
-                                        </span>
-                                    </div>
-                                </div>
-                            );
-                        })
-                    }
-                </div>
+        <!-- Scroll Indicator -->
+        <div
+            class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-50"
+        >
+            <span
+                class="text-xs tracking-widest uppercase text-gray-500 mb-2 block text-center"
+                >Scroll</span
+            >
+            <div
+                class="w-[1px] h-12 bg-gradient-to-b from-white to-transparent mx-auto"
+            >
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Booking Section -->
-        <section id="reservar" class="bg-white py-12 sm:py-16">
-            <div class="container mx-auto px-4">
-                <div class="text-center mb-10 sm:mb-12">
-                    <span
-                        class="inline-block px-4 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4"
-                    >
-                        Fácil y rápido
-                    </span>
+    <!-- Services Section -->
+    <section class="py-24 bg-luxury-black relative z-10">
+        <div class="container mx-auto px-6">
+            <div
+                class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6"
+            >
+                <div>
                     <h2
-                        class="text-3xl sm:text-4xl font-bold text-slate-900 mb-4"
+                        class="font-heading text-4xl md:text-5xl text-white mb-4"
                     >
-                        Reserva tu Cita
+                        Servicios Signature
                     </h2>
-                    <p class="text-slate-600 max-w-xl mx-auto">
-                        Selecciona el servicio, fecha y hora. Recibirás un
-                        ticket de confirmación por WhatsApp.
+                    <p class="text-gray-400 font-sans font-light max-w-md">
+                        Tratamientos diseñados para devolverle a su vehículo su
+                        esplendor original.
                     </p>
                 </div>
+                <div
+                    class="h-[1px] flex-1 bg-white/10 mx-8 hidden md:block mb-4"
+                >
+                </div>
+                <div class="text-right hidden md:block">
+                    <span class="text-primary-500 font-heading text-xl italic"
+                        >{services.length} opciones</span
+                    >
+                </div>
+            </div>
 
-                <!-- React Island for Booking -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {
+                    services.map((service, index) => (
+                        <div class="group relative bg-luxury-card border border-white/5 p-8 hover:border-white/20 transition-all duration-500 hover:bg-white/5">
+                            <div class="absolute top-0 right-0 p-8 opacity-20 group-hover:opacity-40 transition-opacity">
+                                <span class="font-heading text-6xl text-white/10">
+                                    {String(index + 1).padStart(2, "0")}
+                                </span>
+                            </div>
+
+                            <h3 class="font-heading text-2xl text-white mb-3 group-hover:text-primary-400 transition-colors">
+                                {service.name}
+                            </h3>
+                            <div class="w-12 h-[1px] bg-primary-600 mb-6 group-hover:w-20 transition-all duration-500" />
+
+                            <p class="text-gray-400 font-sans font-light leading-relaxed mb-8 min-h-[3rem]">
+                                {service.description ||
+                                    "Experiencia de limpieza y cuidado detallado para su vehículo."}
+                            </p>
+
+                            <div class="flex items-center justify-between mt-auto">
+                                <span class="font-sans text-sm text-gray-500 uppercase tracking-wider">
+                                    {service.duration} MIN
+                                </span>
+                                <span class="font-heading text-xl text-white">
+                                    {new Intl.NumberFormat("es-PY").format(
+                                        Number(service.price),
+                                    )}{" "}
+                                    <span class="text-sm text-primary-500">
+                                        ₲
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    ))
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking Section -->
+    <section id="reservar" class="py-24 bg-[#080808] relative">
+        <!-- Background decorative elements -->
+        <div
+            class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary-900/50 to-transparent"
+        >
+        </div>
+        <div
+            class="absolute top-1/2 left-0 w-96 h-96 bg-primary-900/10 rounded-full blur-[128px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        >
+        </div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center mb-16">
+                <span
+                    class="text-primary-500 font-medium tracking-widest text-sm uppercase mb-3 block"
+                    >Configuración</span
+                >
+                <h2 class="font-heading text-3xl md:text-5xl text-white">
+                    Configure su Cita
+                </h2>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <!-- React Widget -->
                 <BookingWidget
                     services={servicesData}
                     settings={settingsData}
-                    client:load
+                    client:visible
                 />
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Footer -->
-        <footer class="bg-slate-900 text-white py-12">
-            <div class="container mx-auto px-4 text-center">
-                <div
-                    class="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-primary-500/30"
-                >
-                    🚗
+    <!-- Footer -->
+    <footer class="bg-black py-16 border-t border-white/5">
+        <div class="container mx-auto px-6 text-center md:text-left">
+            <div
+                class="flex flex-col md:flex-row justify-between items-center gap-8"
+            >
+                <div>
+                    <h3 class="font-heading text-2xl text-white mb-1">
+                        {businessName}
+                    </h3>
+                    <p class="text-gray-500 text-sm font-light">
+                        Estética Automotriz Premium
+                    </p>
                 </div>
-                <h3 class="text-xl font-bold mb-2">{businessName}</h3>
-                {
-                    settings?.address && (
-                        <p class="text-slate-400 mb-4">{settings.address}</p>
-                    )
-                }
-                <div
-                    class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-slate-400 text-sm"
-                >
-                    <span>📞 {settings?.whatsappNumber}</span>
-                    <span class="hidden sm:inline">•</span>
-                    <span>🕐 {settings?.openTime} - {settings?.closeTime}</span>
+
+                <div class="flex gap-8 text-gray-400 text-sm font-light">
+                    <span>{settings?.address}</span>
+                    <span>{settings?.whatsappNumber}</span>
                 </div>
-                <p class="text-slate-600 text-sm mt-8">
-                    © {new Date().getFullYear()}
-                    {businessName}. Todos los derechos reservados.
-                </p>
+
+                <div class="text-gray-600 text-xs uppercase tracking-widest">
+                    © {new Date().getFullYear()} All Rights Reserved
+                </div>
             </div>
-        </footer>
-    </div>
-</BaseLayout>
+        </div>
+    </footer>
+</Layout>
+
+<style>
+    .animate-slow-zoom {
+        animation: zoom 20s infinite alternate;
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 1s ease-out forwards;
+        opacity: 0;
+    }
+
+    .delay-100 {
+        animation-delay: 0.1s;
+    }
+    .delay-200 {
+        animation-delay: 0.3s;
+    }
+    .delay-300 {
+        animation-delay: 0.5s;
+    }
+
+    @keyframes zoom {
+        0% {
+            transform: scale(1);
+        }
+        100% {
+            transform: scale(1.1);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>

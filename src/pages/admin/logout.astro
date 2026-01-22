@@ -1,6 +1,8 @@
 ---
+import { getSessionCookie } from "../../lib/auth";
+
 // Logout - clear cookie and redirect to landing page
-Astro.cookies.delete("admin_session", { path: "/" });
+Astro.cookies.delete(getSessionCookie(), { path: "/" });
 
 return Astro.redirect("/");
 ---
