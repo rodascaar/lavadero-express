@@ -17,6 +17,8 @@ model User {
   password  String
   name      String
   role      Role     @default(ADMIN)
+  failedLoginAttempts Int @default(0)
+  lockedUntil DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

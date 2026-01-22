@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import prisma from "../lib/prisma";
 import { BookingWidget } from "../components/BookingWidget";
 import { InstructionModal } from "../components/InstructionModal";
+import { parseWorkingDays } from "../lib/utils";
 
 // Fetch services and settings from DB
 const services = await prisma.service.findMany({
@@ -31,9 +32,7 @@ const settingsData = {
     openTime: settings?.openTime || "08:00",
     closeTime: settings?.closeTime || "18:00",
     slotDuration: settings?.slotDuration || 30,
-    workingDays: settings?.workingDays
-        ? settings.workingDays.split(",").map(Number)
-        : [1, 2, 3, 4, 5, 6],
+    workingDays: parseWorkingDays(settings?.workingDays),
     welcomeMessage: settings?.welcomeMessage || "¡Gracias por tu reserva!",
     currency: settings?.currency || "PYG",
     heroImageUrl: settings?.heroImageUrl,

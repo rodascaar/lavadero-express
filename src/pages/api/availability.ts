@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import prisma from '@/lib/prisma';
+import { parseWorkingDays } from '@/lib/utils';
 
 export const GET: APIRoute = async ({ url }) => {
     try {
@@ -26,6 +27,17 @@ export const GET: APIRoute = async ({ url }) => {
         const [endHour, endMinute] = closeTime.split(':').map(Number);
 
         const date = new Date(dateStr + 'T00:00:00Z');
+
+        // Check if working day
+        const dayOfWeek = date.getUTCDay();
+        const workingDays = parseWorkingDays(settings?.workingDays);
+        if (!workingDays.includes(dayOfWeek)) {
+            return new Response(JSON.stringify({ slots: [], error: 'Día no laborable' }), {
+                status: 200, // Return empty slots instead of error for better UX
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
         const nextDay = new Date(dateStr + 'T00:00:00Z');
         nextDay.setUTCDate(nextDay.getUTCDate() + 1);
 

@@ -1,5 +1,5 @@
 ---
-import { verifySession, getSessionCookie } from "../lib/auth";
+import { verifySession, getSessionCookie, isAdmin } from "../lib/auth";
 import prisma from "../lib/prisma";
 
 export interface Props {
@@ -28,6 +28,9 @@ const navItems = [
     { href: "/admin/bookings", icon: "📅", label: "Reservas" },
     { href: "/admin/contacts", icon: "👥", label: "Clientes" },
     { href: "/admin/services", icon: "🚗", label: "Servicios" },
+    ...(isAdmin(session)
+        ? [{ href: "/admin/users", icon: "👤", label: "Usuarios" }]
+        : []),
     { href: "/admin/settings", icon: "⚙️", label: "Configuración" },
 ];
 ---

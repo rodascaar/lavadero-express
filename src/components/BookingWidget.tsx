@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateWhatsAppUrl, PAYMENT_METHOD_LABELS, generateReferenceCode } from '@/lib/whatsapp';
+import { parseWorkingDays } from '@/lib/utils';
 
 interface Service {
     id: string;
@@ -180,19 +181,8 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
         // Create a normalized Date for current business day (using UTC to avoid local timezone issues)
         const current = new Date(Date.UTC(y, m - 1, d));
 
-        // 2. ARREGLO CRÍTICO: Parsear workingDays de forma segura
-        let workingDays = settings.workingDays;
-
-        if (typeof workingDays === 'string') {
-            try {
-                const cleanString = (workingDays as string).replace(/[\[\]]/g, '');
-                workingDays = cleanString.split(',').map(Number);
-            } catch (e) {
-                workingDays = [1, 2, 3, 4, 5, 6];
-            }
-        } else if (!Array.isArray(workingDays)) {
-            workingDays = [1, 2, 3, 4, 5, 6];
-        }
+        // 2. ARREGLO CRÍTICO: Parsear workingDays de forma segura usando la utilidad centralizada
+        const workingDays = parseWorkingDays(settings.workingDays);
 
         let count = 0;
         let safety = 0;
