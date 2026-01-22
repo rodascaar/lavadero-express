@@ -218,4 +218,54 @@ TZ="America/Asuncion" # O tu zona horaria local. Importante para que las fechas 
 *   `npm run db:generate`: Regenera el cliente de Prisma (necesario tras cambios de esquema).
 
 ### Despliegue con Docker
-El archivo `docker-compose.yml` orquesta la base de datos PostgreSQL. Para producción, se recomienda ejecutar `npm run build` y servir con `node ./dist/server/entry.mjs`.
+El sistema está totalmente dockerizado y preparado para un despliegue "Hands-off" mediante un pipeline de automatización integrado.
+
+---
+
+## 8. Despliegue en Producción (CapRover & Docker)
+
+El sistema incluye una configuración avanzada de Docker para garantizar que el despliegue sea automático e idempotente.
+
+### Automatización "Hands-off"
+Al iniciar el contenedor (`docker-entrypoint.sh`), el sistema realiza automáticamente los siguientes pasos:
+1.  **Espera**: Verifica que la base de datos PostgreSQL esté lista para recibir conexiones.
+2.  **Generación**: Ejecuta `prisma generate` para sincronizar los tipos del ORM.
+3.  **Sincronización**: Aplica el esquema a la base de datos automáticamente (`prisma db push`).
+4.  **Seed Idempotente**: Verifica si existen los datos básicos (Configuración general y Usuario Administrador). Si no existen, los crea.
+    - **Admin por defecto**: `admin@autospa.com` / `admin123` (Se recomienda cambiar tras el primer acceso).
+    - **Configuración**: Crea el registro `main` con valores predeterminados de AutoSpa.
+
+### Configuración para CapRover
+Se han incluido archivos específicos para facilitar el despliegue en CapRover:
+1.  **`captain-definition`**: Archivo de configuración que le dice a CapRover cómo compilar tu aplicación usando el `Dockerfile` proporcionado.
+2.  **`docker-compose.yml`**: Configuración de orquestación lista para ser importada o usada como base para el stack completo.
+
+### Configuración de Nginx en CapRover
+Astro SSR funciona mejor con ajustes específicos de Nginx. En la configuración de tu App en CapRover (**App Config** > **HTTP Settings** > **Edit Default Nginx Conf**), se recomienda asegurar que el bloque `location /` se vea así:
+
+```nginx
+location / {
+    proxy_pass http://<your-app-name>:4321;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+
+    # Compresión Gzip para mejorar velocidad
+    gzip on;
+    gzip_proxied any;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml+rss text/javascript;
+}
+```
+
+### Comandos de Despliegue
+Si tienes la CLI de CapRover instalada:
+```bash
+caprover deploy
+```
+
+Si prefieres manual:
+1.  Comprime el contenido del proyecto en un `.tar`.
+2.  Súbelo a CapRover en la pestaña **Deployment**.
+

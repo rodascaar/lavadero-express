@@ -1,20 +1,40 @@
 services:
-  postgres:
+  db:
     image: postgres:16-alpine
-    container_name: lavadero_postgres
+    container_name: lavadero_db_prod
+    restart: always
     environment:
-      POSTGRES_USER: lavadero
-      POSTGRES_PASSWORD: lavadero123
-      POSTGRES_DB: lavadero_db
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-lavadero}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lavadero123}
+      POSTGRES_DB: ${POSTGRES_DB:-lavadero_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lavadero -d lavadero_db"]
-      interval: 5s
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-lavadero} -d $${POSTGRES_DB:-lavadero_db}" ]
+      interval: 10s
       timeout: 5s
       retries: 5
+
+  app:
+    build: .
+    container_name: lavadero_app_prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-lavadero}:${POSTGRES_PASSWORD:-lavadero123}@db:5432/${POSTGRES_DB:-lavadero_db}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change_me_to_a_long_random_string}
+      HOST: 0.0.0.0
+      PORT: 4321
+    ports:
+      - "4321:4321"
+    # Etiquetas específicas para CapRover
+    labels:
+      caprover.enable: "true"
+      caprover.port: "4321"
+      caprover.expose: "true"
+      caprover.image: "lavadero-express"
 
 volumes:
   postgres_data:

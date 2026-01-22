@@ -1,102 +1,87 @@
 import { PrismaClient } from '@prisma/client';
-import { hashPassword } from '../src/lib/auth';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-    console.log('🌱 Seeding database...');
+    console.log('🌱 Starting idempotent seeding...');
 
-    // Create default settings
+    // 1. Core Settings (id: "main")
+    const defaultSettings = {
+        businessName: 'AutoSpa Premium',
+        whatsappNumber: '+595991234567',
+        openTime: '08:00',
+        closeTime: '18:00',
+        slotDuration: 30,
+        maxSlotsPerTime: 2,
+        workingDays: '1,2,3,4,5,6',
+        address: 'Av. Mariscal López 1234, Asunción',
+        welcomeMessage: '¡Gracias por reservar con AutoSpa! Te esperamos.',
+        currency: 'PYG',
+        timezone: 'America/Asuncion'
+    };
+
     await prisma.settings.upsert({
         where: { id: 'main' },
-        update: {},
+        update: {}, // Don't overwrite existing settings if they exist
         create: {
             id: 'main',
-            businessName: 'AutoSpa Premium',
-            whatsappNumber: '+595991234567',
-            openTime: '08:00',
-            closeTime: '18:00',
-            slotDuration: 30,
-            maxSlotsPerTime: 2,
-            workingDays: '1,2,3,4,5,6',
-            address: 'Av. Mariscal López 1234, Asunción',
-            welcomeMessage: '¡Gracias por reservar con AutoSpa! Te esperamos.',
-            currency: 'PYG',
+            ...defaultSettings
         },
     });
-    console.log('✅ Settings created');
+    console.log('✅ Settings ensured');
 
-    // Create admin user
-    const hashedPassword = await hashPassword('admin123');
-    await prisma.user.upsert({
-        where: { email: 'admin@lavadero.com' },
-        update: {},
-        create: {
-            email: 'admin@lavadero.com',
-            password: hashedPassword,
-            name: 'Administrador',
-            role: 'ADMIN',
-        },
+    // 2. Admin User (admin@autospa.com)
+    const adminEmail = 'admin@autospa.com';
+    const existingAdmin = await prisma.user.findUnique({
+        where: { email: adminEmail }
     });
-    console.log('✅ Admin user created');
 
-    // Create services
-    const services = [
-        {
-            name: 'Lavado Express',
-            description: 'Lavado exterior rápido con secado a mano. Ideal para mantenimiento semanal.',
-            price: 50000,
-            duration: 20,
-            sortOrder: 1,
-        },
-        {
-            name: 'Lavado Completo',
-            description: 'Lavado exterior e interior con aspirado, limpieza de tablero y cristales.',
-            price: 100000,
-            duration: 45,
-            sortOrder: 2,
-        },
-        {
-            name: 'Lavado Premium',
-            description: 'Servicio completo con encerado, acondicionador de cuero y aromatizante premium.',
-            price: 180000,
-            duration: 90,
-            sortOrder: 3,
-        },
-        {
-            name: 'Limpieza de Tapizados',
-            description: 'Limpieza profunda de asientos y alfombras con productos especializados.',
-            price: 150000,
-            duration: 120,
-            sortOrder: 4,
-        },
-        {
-            name: 'Detailing Completo',
-            description: 'Restauración integral: pulido, descontaminación, protección cerámica y más.',
-            price: 500000,
-            duration: 240,
-            sortOrder: 5,
-        },
-    ];
-
-    for (const service of services) {
-        await prisma.service.upsert({
-            where: { id: service.name.toLowerCase().replace(/\s+/g, '-') },
-            update: service,
-            create: {
-                id: service.name.toLowerCase().replace(/\s+/g, '-'),
-                ...service,
+    if (!existingAdmin) {
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        await prisma.user.create({
+            data: {
+                email: adminEmail,
+                password: hashedPassword,
+                name: 'Administrador Senior',
+                role: 'ADMIN',
             },
         });
+        console.log('✅ Admin user created (admin@autospa.com)');
+    } else {
+        console.log('ℹ️ Admin user already exists');
     }
-    console.log('✅ Services created');
 
-    console.log('🎉 Seeding completed!');
+    // 3. Essential Services
+    const initialServices = [
+        { name: 'Lavado Express', price: 50000, duration: 20 },
+        { name: 'Lavado Completo', price: 100000, duration: 45 },
+        { name: 'Lavado Premium', price: 180000, duration: 90 }
+    ];
+
+    for (const service of initialServices) {
+        const serviceId = service.name.toLowerCase().replace(/\s+/g, '-');
+        await prisma.service.upsert({
+            where: { id: serviceId },
+            update: {}, // Don't modify existing services
+            create: {
+                id: serviceId,
+                name: service.name,
+                price: service.price,
+                duration: service.duration,
+                sortOrder: initialServices.indexOf(service) + 1,
+                active: true
+            }
+        });
+    }
+    console.log('✅ Essential services ensured');
+
+    console.log('🎉 Seeding completed successfully!');
 }
 
 main()
     .catch((e) => {
-        console.error('❌ Error seeding:', e);
+        console.error('❌ Error seeding database:', e);
         process.exit(1);
     })
     .finally(async () => {
