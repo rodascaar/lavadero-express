@@ -16,9 +16,9 @@ export const GET: APIRoute = async ({ url }) => {
         }
 
         if (date) {
-            const startDate = new Date(date);
-            const endDate = new Date(date);
-            endDate.setDate(endDate.getDate() + 1);
+            const startDate = new Date(date + 'T00:00:00Z');
+            const endDate = new Date(date + 'T00:00:00Z');
+            endDate.setUTCDate(endDate.getUTCDate() + 1);
             where.date = {
                 gte: startDate,
                 lt: endDate,
@@ -74,9 +74,9 @@ export const POST: APIRoute = async ({ request }) => {
             const maxSlots = settings?.maxSlotsPerTime || 1;
 
             // Check if slot is still available
-            const bookingDate = new Date(date);
-            const nextDay = new Date(date);
-            nextDay.setDate(nextDay.getDate() + 1);
+            const bookingDate = new Date(date + 'T00:00:00Z');
+            const nextDay = new Date(date + 'T00:00:00Z');
+            nextDay.setUTCDate(nextDay.getUTCDate() + 1);
 
             const existingBookings = await tx.booking.count({
                 where: {
@@ -157,7 +157,7 @@ export const POST: APIRoute = async ({ request }) => {
             return await tx.booking.create({
                 data: {
                     referenceCode,
-                    date: new Date(date),
+                    date: new Date(date + 'T00:00:00Z'),
                     time,
                     status: 'PENDING',
                     paymentMethod,

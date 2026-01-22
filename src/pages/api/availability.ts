@@ -25,9 +25,9 @@ export const GET: APIRoute = async ({ url }) => {
         const [startHour, startMinute] = openTime.split(':').map(Number);
         const [endHour, endMinute] = closeTime.split(':').map(Number);
 
-        const date = new Date(dateStr);
-        const nextDay = new Date(dateStr);
-        nextDay.setDate(nextDay.getDate() + 1);
+        const date = new Date(dateStr + 'T00:00:00Z');
+        const nextDay = new Date(dateStr + 'T00:00:00Z');
+        nextDay.setUTCDate(nextDay.getUTCDate() + 1);
 
         // Get all bookings for the specified date
         const bookings = await prisma.booking.findMany({
@@ -44,13 +44,13 @@ export const GET: APIRoute = async ({ url }) => {
             slotCounts[b.time] = (slotCounts[b.time] || 0) + 1;
         });
 
-        // Generate theoretical slots
+        // Generate theoretical slots using UTC to avoid local timezone shifts
         const slots = [];
-        const currentSlotTime = new Date();
-        currentSlotTime.setHours(startHour, startMinute, 0, 0);
+        const currentSlotTime = new Date(dateStr + 'T00:00:00Z');
+        currentSlotTime.setUTCHours(startHour, startMinute, 0, 0);
 
-        const endSlotTime = new Date();
-        endSlotTime.setHours(endHour, endMinute, 0, 0);
+        const endSlotTime = new Date(dateStr + 'T00:00:00Z');
+        endSlotTime.setUTCHours(endHour, endMinute, 0, 0);
 
         const timezone = (settings as any)?.timezone || 'America/Asuncion';
         const now = new Date();
@@ -77,11 +77,10 @@ export const GET: APIRoute = async ({ url }) => {
         const currentMinutes = bizHour * 60 + bizMinute;
 
         while (currentSlotTime < endSlotTime) {
-            const timeStr = currentSlotTime.toLocaleTimeString('es-ES', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false,
-            });
+            const timeStr = [
+                String(currentSlotTime.getUTCHours()).padStart(2, '0'),
+                String(currentSlotTime.getUTCMinutes()).padStart(2, '0')
+            ].join(':');
 
             const [h, m] = timeStr.split(':').map(Number);
             const slotMinutes = h * 60 + m;
@@ -113,7 +112,7 @@ export const GET: APIRoute = async ({ url }) => {
                 available: status === 'AVAILABLE'
             });
 
-            currentSlotTime.setMinutes(currentSlotTime.getMinutes() + slotDuration);
+            currentSlotTime.setUTCMinutes(currentSlotTime.getUTCMinutes() + slotDuration);
         }
 
         return new Response(JSON.stringify({

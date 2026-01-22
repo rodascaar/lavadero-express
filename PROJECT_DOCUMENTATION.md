@@ -57,7 +57,7 @@ El proyecto utiliza una arquitectura moderna basada en **Islands Architecture** 
 *   `src/components/`: Componentes de React (BookingWidget, Gráficos).
 *   `src/pages/api/`: Controladores del Backend (Endpoints REST).
 *   `src/lib/`: Utilidades compartidas (Cliente Prisma, Auth, Helpers).
-*   `src/layers/`: Plantillas base de Astro.
+*   `src/layouts/`: Plantillas base de Astro.
 *   `prisma/`: Definición de esquema de base de datos y seeds.
 
 ---
@@ -140,7 +140,7 @@ El sistema está diseñado para ser **Timezone-Aware**.
         *   Se busca/crea el Cliente por teléfono.
         *   Se busca/crea el Vehículo por placa y se asocia al cliente.
         *   Se crea la Reserva.
-    *   **Transacciones**: Todo este proceso ocurre dentro de una `prisma.$transaction` para evitar condiciones de carrera (Race Conditions) y sobreventa de slots.
+    *   **Transacciones**: Todo este proceso ocurre dentro de una `prisma.$transaction`. El servidor vuelve a validar la disponibilidad (`maxSlotsPerTime`) antes de crear el registro, evitando sobreventa incluso si múltiples usuarios intentan reservar el mismo micro-segundo.
 5.  **Confirmación y WhatsApp (Nivel 1)**:
     *   Se muestra una pantalla de "Éxito" con el código de reserva.
     *   Botón para abrir WhatsApp con un mensaje pre-formateado.

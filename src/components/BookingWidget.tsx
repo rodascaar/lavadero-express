@@ -143,7 +143,12 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
     const fetchAvailability = async (date: Date) => {
         setLoading(true);
         try {
-            const dateStr = date.toISOString().split('T')[0];
+            // Format YYYY-MM-DD from UTC date to match business day correctly
+            const y = date.getUTCFullYear();
+            const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const d = String(date.getUTCDate()).padStart(2, '0');
+            const dateStr = `${y}-${m}-${d}`;
+
             const response = await fetch(`/api/availability?date=${dateStr}`);
             if (response.ok) {
                 const data = await response.json();
@@ -160,7 +165,7 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
         const days: Date[] = [];
         const timezone = settings.timezone || 'America/Asuncion';
 
-        // Get 'today' in business timezone
+        // 1. Obtener 'Hoy' en la zona horaria del negocio
         const now = new Date();
         const formatter = new Intl.DateTimeFormat('en-CA', {
             timeZone: timezone,
@@ -169,57 +174,51 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
             day: '2-digit',
         });
 
-        const [y, m, d] = formatter.format(now).split('-').map(Number);
-        // Create a normalized Date for current business day (midnight)
-        const current = new Date(y, m - 1, d);
+        const dateParts = formatter.format(now); // Ej: "2025-01-22"
+        const [y, m, d] = dateParts.split('-').map(Number);
+
+        // Create a normalized Date for current business day (using UTC to avoid local timezone issues)
+        const current = new Date(Date.UTC(y, m - 1, d));
+
+        // 2. ARREGLO CRÍTICO: Parsear workingDays de forma segura
+        let workingDays = settings.workingDays;
+
+        if (typeof workingDays === 'string') {
+            try {
+                const cleanString = (workingDays as string).replace(/[\[\]]/g, '');
+                workingDays = cleanString.split(',').map(Number);
+            } catch (e) {
+                workingDays = [1, 2, 3, 4, 5, 6];
+            }
+        } else if (!Array.isArray(workingDays)) {
+            workingDays = [1, 2, 3, 4, 5, 6];
+        }
 
         let count = 0;
         let safety = 0;
-        const workingDays = settings.workingDays;
 
         while (count < 14 && safety < 60) {
-            const dayOfWeek = current.getDay();
-            if (workingDays.includes(dayOfWeek)) {
+            const dayOfWeek = current.getUTCDay(); // 0 (Dom) - 6 (Sab)
+
+            if ((workingDays as number[]).includes(dayOfWeek)) {
                 days.push(new Date(current));
                 count++;
             }
-            current.setDate(current.getDate() + 1);
+            // Advance by adding steps to UTC Date
+            current.setUTCDate(current.getUTCDate() + 1);
             safety++;
         }
+        console.log(`Calendario generado: ${days.length} días. Primer día: ${days[0]?.toISOString()}`);
         return days;
     };
 
-    const generateTimeSlots = () => {
-        const slots: string[] = [];
-        if (!settings.openTime || !settings.closeTime) return slots;
-
-        const [startHour, startMinute] = settings.openTime.split(':').map(Number);
-        const [endHour, endMinute] = settings.closeTime.split(':').map(Number);
-
-        const current = new Date();
-        current.setHours(startHour, startMinute, 0, 0);
-
-        const end = new Date();
-        end.setHours(endHour, endMinute, 0, 0);
-
-        while (current < end) {
-            slots.push(
-                current.toLocaleTimeString('es-ES', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false,
-                })
-            );
-            current.setMinutes(current.getMinutes() + settings.slotDuration);
-        }
-        return slots;
-    };
 
     const formatDate = (date: Date) => {
         return date.toLocaleDateString('es-ES', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
+            timeZone: 'UTC',
         });
     };
 
@@ -229,6 +228,7 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
+            timeZone: 'UTC',
         });
         // Capitalize first letter and remove dot from short weekday/month
         return d.charAt(0).toUpperCase() + d.slice(1).replace(/\./g, '');
@@ -248,10 +248,10 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
 
         try {
             const referenceCode = generateReferenceCode();
-            // Format date as YYYY-MM-DD in local time
-            const year = selectedDate.getFullYear();
-            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-            const day = String(selectedDate.getDate()).padStart(2, '0');
+            // Format date as YYYY-MM-DD in UTC (normalized business day)
+            const year = selectedDate.getUTCFullYear();
+            const month = String(selectedDate.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getUTCDate()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day}`;
             const formattedPhone = formatPhoneForStorage(formData.phone);
 
@@ -316,7 +316,6 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
         }
     };
 
-    const allTimeSlots = generateTimeSlots();
 
     return (
         <div className="w-full">
@@ -412,10 +411,10 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
                         <p className="text-center text-gray-400 font-sans text-sm mb-12 uppercase tracking-widest">Seleccione disponibilidad</p>
 
                         {/* Date Selection - Wheel Style */}
-                        <div className="mb-12 overflow-hidden relative">
-                            <div className="flex gap-4 overflow-x-auto pb-4 px-4 snap-x no-scrollbar justify-start md:justify-center">
+                        <div className="mb-12 relative">
+                            <div className="flex gap-4 overflow-x-auto pb-4 px-12 snap-x no-scrollbar justify-start">
                                 {generateCalendarDays().map((date, i) => {
-                                    const isSelected = selectedDate?.toDateString() === date.toDateString();
+                                    const isSelected = selectedDate?.toISOString().split('T')[0] === date.toISOString().split('T')[0];
                                     return (
                                         <motion.button
                                             key={date.toISOString()}
@@ -432,13 +431,13 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
                                                 }`}
                                         >
                                             <span className="text-xs uppercase tracking-widest mb-1 font-technical">
-                                                {date.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '')}
+                                                {date.toLocaleDateString('es-ES', { weekday: 'short', timeZone: 'UTC' }).replace('.', '')}
                                             </span>
                                             <span className={`text-3xl font-heading mb-1 ${isSelected ? 'font-bold' : 'font-light'}`}>
-                                                {date.getDate()}
+                                                {date.getUTCDate()}
                                             </span>
                                             <span className="text-xs uppercase font-technical opacity-60">
-                                                {date.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '')}
+                                                {date.toLocaleDateString('es-ES', { month: 'short', timeZone: 'UTC' }).replace('.', '')}
                                             </span>
                                         </motion.button>
                                     );
