@@ -10,11 +10,14 @@ echo "🚀 Iniciando proceso de despliegue automatizado..."
 # Eliminamos el protocolo (ej. postgresql://)
 CLEAN_URL=$(echo $DATABASE_URL | sed -e 's|^[^/]*//||')
 
-# Extraemos el Host (lo que esté después de @ o al principio, hasta el : o /)
-DB_HOST=$(echo $CLEAN_URL | sed -e 's/.*@//' -e 's/:.*//' -e 's/\/.*//')
+# Extraemos la parte del host y lo que sigue (después del @)
+HOST_AND_BEYOND=$(echo $CLEAN_URL | sed -e 's/.*@//')
 
-# Extraemos el Puerto (buscamos un número de 4-5 dígitos)
-DB_PORT=$(echo $CLEAN_URL | grep -oE ':[0-9]+' | cut -d: -f2 | head -n1)
+# Extraemos el Host (lo que esté antes de : o /)
+DB_HOST=$(echo $HOST_AND_BEYOND | sed -e 's/:.*//' -e 's/\/.*//')
+
+# Extraemos el Puerto (buscamos un número que siga a los dos puntos en el host)
+DB_PORT=$(echo $HOST_AND_BEYOND | sed -e 's/\/.*//' | grep -oE ':[0-9]+' | cut -d: -f2 | head -n1)
 
 # Si no se detecta puerto, usamos 5432
 if [ -z "$DB_PORT" ]; then
