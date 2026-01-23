@@ -15,6 +15,32 @@ const settings = await prisma.settings.findUnique({
     where: { id: "main" },
 });
 
+const paymentMethods = await (prisma as any).paymentMethod.findMany({
+    where: { active: true },
+    orderBy: { createdAt: "asc" },
+});
+
+// Seed defaults if empty (match logic in API)
+let paymentMethodsData = paymentMethods.map((m: any) => ({
+    id: m.id,
+    name: m.name,
+}));
+
+if (paymentMethodsData.length === 0) {
+    const defaults = [
+        { name: "Efectivo" },
+        { name: "Transferencia" },
+        { name: "QR" },
+        { name: "Link de Pago" },
+    ];
+    // We don't necessarily need to write to DB here if it's a read-only page,
+    // but the API does it. For now, let's just use defaults if DB is empty to avoid blocking the user.
+    paymentMethodsData = defaults.map((d, i) => ({
+        id: `default-${i}`,
+        name: d.name,
+    }));
+}
+
 const businessName = settings?.businessName || "AutoSpa";
 
 // Prepare data for React component
@@ -208,6 +234,7 @@ const settingsData = {
                 <BookingWidget
                     services={servicesData}
                     settings={settingsData}
+                    paymentMethods={paymentMethodsData}
                     client:visible
                 />
             </div>

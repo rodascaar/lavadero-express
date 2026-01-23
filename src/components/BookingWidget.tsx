@@ -26,6 +26,7 @@ interface Settings {
 interface BookingWidgetProps {
     services: Service[];
     settings: Settings;
+    paymentMethods: { id: string; name: string }[];
 }
 
 interface FormData {
@@ -96,7 +97,7 @@ interface TimeSlotData {
     available: boolean;
 }
 
-export function BookingWidget({ services, settings }: BookingWidgetProps) {
+export function BookingWidget({ services, settings, paymentMethods }: BookingWidgetProps) {
     const [selectedService, setSelectedService] = useState<Service | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -109,29 +110,11 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
         phone: '',
         plate: '',
         model: '',
-        paymentMethod: '',
+        paymentMethod: paymentMethods.length > 0 ? paymentMethods[0].name : '',
     });
-    const [paymentMethods, setPaymentMethods] = useState<{ id: string, name: string }[]>([]);
 
-    useEffect(() => {
-        fetchPaymentMethods();
-    }, []);
-
-    const fetchPaymentMethods = async () => {
-        try {
-            const response = await fetch('/api/admin/payment-methods');
-            if (response.ok) {
-                const methods = await response.json();
-                const activeMethods = methods.filter((m: any) => m.active);
-                setPaymentMethods(activeMethods);
-                if (activeMethods.length > 0) {
-                    setFormData(prev => ({ ...prev, paymentMethod: activeMethods[0].name }));
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching payment methods:', error);
-        }
-    };
+    // Removed client-side fetch as it was causing auth issues for guests
+    // Payment methods are now passed via props from index.astro
 
     // Reset time when date changes
     useEffect(() => {
@@ -587,7 +570,7 @@ export function BookingWidget({ services, settings }: BookingWidgetProps) {
                                 <div className="pt-4">
                                     <label className="block text-xs font-technical uppercase tracking-widest text-gray-400 mb-4">Método de Pago</label>
                                     <div className="grid grid-cols-2 gap-4">
-                                        {paymentMethods.map((method) => (
+                                        {paymentMethods && paymentMethods.map((method) => (
                                             <button
                                                 key={method.id}
                                                 type="button"
