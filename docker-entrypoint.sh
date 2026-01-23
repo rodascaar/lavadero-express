@@ -6,14 +6,43 @@ set -e
 echo "🚀 Iniciando proceso de despliegue automatizado..."
 
 # 1. Esperar a que PostgreSQL esté listo
-DB_HOST=$(echo $DATABASE_URL | sed -e 's/.*@//' -e 's/:.*//')
-DB_PORT=$(echo $DATABASE_URL | sed -e 's/.*://' -e 's/\/.*//')
+# Limpiamos la URL para extraer solo el host y el puerto
+# Eliminamos el protocolo (ej. postgresql://)
+CLEAN_URL=$(echo $DATABASE_URL | sed -e 's|^[^/]*//||')
 
-echo "⏳ Esperando conexión a base de datos en $DB_HOST:$DB_PORT..."
+# Extraemos el Host (lo que esté después de @ o al principio, hasta el : o /)
+DB_HOST=$(echo $CLEAN_URL | sed -e 's/.*@//' -e 's/:.*//' -e 's/\/.*//')
+
+# Extraemos el Puerto (buscamos un número de 4-5 dígitos)
+DB_PORT=$(echo $CLEAN_URL | grep -oE ':[0-9]+' | cut -d: -f2 | head -n1)
+
+# Si no se detecta puerto, usamos 5432
+if [ -z "$DB_PORT" ]; then
+  DB_PORT=5432
+fi
+
+echo "🔍 Diagnóstico de Conexión:"
+echo "   URL Original: $DATABASE_URL"
+echo "   Host detectado: $DB_HOST"
+echo "   Puerto detectado: $DB_PORT"
+echo "⏳ Esperando conexión..."
+
+MAX_RETRIES=45
+COUNT=0
+
 while ! nc -z $DB_HOST $DB_PORT; do
-  sleep 1
+  COUNT=$((COUNT + 1))
+  if [ $COUNT -gt $MAX_RETRIES ]; then
+    echo "❌ ERROR CRÍTICO: No se pudo conectar a $DB_HOST en el puerto $DB_PORT."
+    echo "   Esto causa el Error 502 de Nginx porque la app no puede arrancar."
+    echo "   Asegúrate de que DATABASE_URL en CapRover sea correcta."
+    exit 1
+  fi
+  echo "   Intento ($COUNT/$MAX_RETRIES)..."
+  sleep 2
 done
-echo "✅ Conexión a base de datos establecida."
+
+echo "✅ Conexión establecida exitosamente."
 
 # 2. Generar Prisma Client
 echo "⚙️ Generando cliente Prisma..."
